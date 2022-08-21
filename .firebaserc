@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "io-box"
-  }
+  },
+  "targets": {
+    "io-box": {
+      "hosting": {
+        "io-box-admin": [
+          "io-box"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
