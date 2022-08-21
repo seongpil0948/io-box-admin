@@ -1,9 +1,12 @@
+<script setup lang="ts"></script>
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
-  <router-view />
+  <n-message-provider placement="top-right">
+    <n-loading-bar-provider>
+      <n-dialog-provider>
+        <main-view />
+      </n-dialog-provider>
+    </n-loading-bar-provider>
+  </n-message-provider>
 </template>
 
 <style>
@@ -12,19 +15,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
-}
-
-nav {
-  padding: 30px;
-}
-
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-nav a.router-link-exact-active {
-  color: #42b983;
+  width: 100%;
+  height: 100%;
 }
 </style>
