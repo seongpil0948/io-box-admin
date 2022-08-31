@@ -4,7 +4,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
-    "target": "io-box-admin",
+    "site": "io-box-admin",
     "public": "dist",
     "ignore": [
       "firebase.json",

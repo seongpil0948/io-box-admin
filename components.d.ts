@@ -9,6 +9,7 @@ declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     HomeView: typeof import('./src/view/HomeView.vue')['default']
     IoSider: typeof import('./src/component/IoSider.vue')['default']
+    LoginView: typeof import('./src/view/LoginView.vue')['default']
     LogoImage: typeof import('./src/component/LogoImage.vue')['default']
     MainView: typeof import('./src/view/MainView.vue')['default']
     NDataTable: typeof import('naive-ui')['NDataTable']
