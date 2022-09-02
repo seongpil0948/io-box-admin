@@ -28,7 +28,7 @@ async function onAppendLocate(l: Locate) {
 }
 
 function onLocateClose(l: Locate) {
-  deleteDoc(doc(locateCollection, l.code + l.alias))
+  deleteDoc(doc(locateCollection, `${l.code}__${l.alias}`))
     .then(() => msg.success("픽업지역 삭제완료"))
     .catch(() => msg.error("픽업지역 삭제실패"));
 }
