@@ -2,16 +2,28 @@ import { COIN_PAY_RATIO, COIN_FEE } from "@/constants";
 import { loadDate, insertById, getIoCollection, IoCollection } from "@/util";
 import { DocumentData, DocumentSnapshot } from "firebase/firestore";
 import { CommonField } from "../common";
-import { IO_BANKS, AccountCRT, IoPayCRT, PayHistoryCRT } from "./domain";
+import { IO_BANKS, IoPayCRT, PayHistoryCRT } from "./domain";
 
 export class IoAccount {
-  userId: string;
+  accountName: string;
   accountNumber: string;
   bank: IO_BANKS;
-  constructor(p: AccountCRT) {
-    this.userId = p.userId;
+  constructor(p: {
+    accountName: string;
+    accountNumber: string;
+    bank: IO_BANKS;
+  }) {
+    this.accountName = p.accountName;
     this.accountNumber = p.accountNumber;
     this.bank = p.bank;
+  }
+
+  static empty(): IoAccount {
+    return new IoAccount({
+      accountName: "",
+      accountNumber: "",
+      bank: "NH",
+    });
   }
 }
 
@@ -31,6 +43,14 @@ export class IoPay extends CommonField implements IoPayCRT {
 
   get availBudget() {
     return this.budget - this.pendingBudget;
+  }
+  static initial(userId: string) {
+    return new IoPay({
+      userId,
+      budget: 0,
+      pendingBudget: 0,
+      history: [],
+    });
   }
   static toMoneyString(coin: number) {
     return IoPay.coinToMoney(coin).toLocaleString() + "원";

@@ -12,46 +12,48 @@ import { PaymentDB, IoPay } from "..";
 export const IopayFB: PaymentDB = {
   getIoPayByUserListen: function (uid: string) {
     const userPay = ref<IoPay | null>(null);
-    const docRef = doc(
-      getIoCollection({ c: IoCollection.IO_PAY }),
-      uid
-    ).withConverter(IoPay.fireConverter());
-    onSnapshot(docRef, (doc) => {
-      if (!doc.exists()) {
-        const pay = new IoPay({
-          userId: uid,
-          budget: 100,
-          pendingBudget: 10,
-          history: [],
-        });
-        setDoc(docRef, pay);
-        userPay.value = pay;
-      } else if (doc.data()) {
-        userPay.value = doc.data();
-      }
+    const docRef = getDocRef(uid);
+    onSnapshot(docRef, async (docData) => {
+      userPay.value = await getPayFromDoc(docData, uid);
     });
     return userPay;
   },
+  getIoPaysListen: function () {
+    const usersPay = ref<IoPay[]>([]);
+    onSnapshot(getPayCollection(), async (snapshot) => {
+      usersPay.value = [];
+      snapshot.forEach((s) => {
+        const data = s.data();
+        if (data) {
+          usersPay.value.push(data);
+        }
+      });
+    });
+    return usersPay;
+  },
   getIoPayByUser: async function (uid: string) {
-    const docRef = doc(
-      getIoCollection({ c: IoCollection.IO_PAY }),
-      uid
-    ).withConverter(IoPay.fireConverter());
+    const docRef = getDocRef(uid);
     const docData = await getDoc(docRef);
-    return ioPayFromDoc(docData);
+    return await getPayFromDoc(docData, uid);
   },
 };
-function ioPayFromDoc(doc: DocumentSnapshot<IoPay | null>) {
-  if (!doc.exists()) {
-    // const pay = new IoPay({
-    //   userId: uid,
-    //   budget: 100,
-    //   pendingBudget: 10,
-    //   history: [],
-    // });
-    // setDoc(docRef, pay);
-    // userPay = pay;
-    throw new Error("유저 결제 정보가 존재하지 않습니다.");
+
+function getDocRef(uid: string) {
+  return doc(getPayCollection(), uid);
+}
+
+async function getPayFromDoc(d: DocumentSnapshot<IoPay | null>, uid: string) {
+  if (!d.exists() || !d.data()) {
+    const docRef = getDocRef(uid);
+    const pay = IoPay.initial(uid);
+    await setDoc(docRef, pay);
+    return pay;
   }
-  return doc.data() as IoPay;
+  return d.data()!;
+}
+
+function getPayCollection() {
+  return getIoCollection({ c: IoCollection.IO_PAY }).withConverter(
+    IoPay.fireConverter()
+  );
 }
