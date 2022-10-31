@@ -1,4 +1,4 @@
-import moment from "moment";
+import { getCurrDate } from "@/util/date";
 
 export class CommonField {
   createdAt?: Date;
@@ -8,11 +8,19 @@ export class CommonField {
     this.updatedAt = updatedAt ?? new Date();
   }
   toJson(): { [x: string]: Partial<unknown> } {
-    const c = dateToJson(this.createdAt);
-    const u = dateToJson(this.updatedAt);
-    const j = JSON.parse(JSON.stringify(this));
-    j.createdAt = c;
-    j.updatedAt = u;
+    return CommonField.toJson(this);
+  }
+  static toJson(c: any) {
+    const dateKeys: string[] = [];
+    Object.entries(c).forEach(([k, v]) => {
+      if (Object.prototype.toString.call(v) === "[object Date]") {
+        dateKeys.push(k);
+      }
+    });
+    const j = JSON.parse(JSON.stringify(c));
+    dateKeys.forEach((dk) => {
+      j[dk] = dateToJson(j[dk]);
+    });
     return j;
   }
   update(): Promise<void> {
@@ -23,7 +31,7 @@ export class CommonField {
 }
 
 function dateToJson(data: string | Date | undefined): string {
-  if (!data) return moment(new Date()).format();
+  if (!data) return getCurrDate();
   else if (typeof data === "string") {
     return data;
   } else if (data instanceof Date) {

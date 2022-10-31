@@ -42,11 +42,17 @@ export function getIoCollection(p: getCollectParam): CollectionReference {
     case IoCollection.ORDER_PROD_NUMBER:
       str = `user/${p.uid}/orderNumber`; // orderId
       break;
+    case IoCollection.SHIPMENT:
+      str = `user/${p.uid}/shipment`; // orderId
+      break;
     case IoCollection.USER_LOG:
       str = `user/${p.uid}/logs`; // orderId
       break;
     case IoCollection.TOKENS:
       str = `user/${p.uid}/tokens`; // orderId
+      break;
+    case IoCollection.CS_POST:
+      str = `csPost`;
       break;
     default:
       throw Error(`IoCollection Enum Member ${p.c.toString()} is not Exist`);
@@ -101,4 +107,16 @@ export async function batchInQuery<T>(
     batches.push(getDocs(query(c, where(field, "in", [...batch]))));
   }
   return Promise.all(batches);
+}
+
+export function dataFromSnap<T>(snap: QuerySnapshot<T | null>): T[] {
+  const result: T[] = [];
+
+  snap.docs.forEach((d) => {
+    const data = d.data();
+    if (data) {
+      result.push(data);
+    }
+  });
+  return result;
 }

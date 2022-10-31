@@ -38,7 +38,6 @@ async function submitModal() {
   if (!target.value) return msg.error("target UserCombined is null");
   const u = new IoUser(target.value);
   const pay = new IoPay(target.value);
-  console.log("new pay: ", pay);
   Promise.all([u.update(), pay.update()])
     .then(() => {
       msg.info("성공");
