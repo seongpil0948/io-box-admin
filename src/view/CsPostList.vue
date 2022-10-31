@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { CsPost, POST_TYPE, useCsList, USER_ROLE } from "@/composable";
 import { formatDate, loadDate } from "@/util";
-import { table } from "console";
 import {
   NText,
   NSpace,
