@@ -1,7 +1,5 @@
 const { defineConfig } = require("@vue/cli-service");
 const { NaiveUiResolver } = require("unplugin-vue-components/resolvers");
-const BundleAnalyzerPlugin =
-  require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 const path = require("path");
 
 module.exports = defineConfig({
@@ -26,7 +24,6 @@ module.exports = defineConfig({
     },
     devtool: "source-map",
     plugins: [
-      new BundleAnalyzerPlugin(),
       require("unplugin-vue-components/webpack")({
         extensions: ["vue"],
         resolvers: [NaiveUiResolver()],
