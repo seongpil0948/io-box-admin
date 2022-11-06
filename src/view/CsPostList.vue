@@ -138,7 +138,15 @@ async function onPosted() {
 <template>
   <n-space vertical align="center" item-style="width: 100%; height: 100%">
     <n-h2>CS 작성 페이지</n-h2>
-    <n-data-table ref="table" :columns="columns" :data="posts" />
+    <n-data-table
+      ref="table"
+      :columns="columns"
+      :data="posts"
+      :pagination="{
+        'show-size-picker': true,
+        'page-sizes': [5, 10, 25, 50],
+      }"
+    />
   </n-space>
   <n-modal
     :show="editTarget !== null"
