@@ -1,7 +1,6 @@
 import { Firestore, getFirestore } from "firebase/firestore";
 import { FirebaseStorage, getStorage } from "firebase/storage";
 import { Analytics, getAnalytics } from "firebase/analytics";
-import { getCurrentInstance } from "vue";
 import { initializeApp } from "@firebase/app";
 
 interface IoFire {

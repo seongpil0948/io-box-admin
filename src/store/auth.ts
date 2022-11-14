@@ -13,12 +13,15 @@ export const useAuthStore = defineStore("auth", () => {
     if (user.value === null) {
       const userStr = localStorage.getItem(userKey);
       if (userStr) {
-        const u = JSON.parse(userStr);
+        const u = IoUser.fromJson(JSON.parse(userStr));
+        if (!u) {
+          router.replace({ name: "Login" });
+        }
         user.value = u!;
         return user.value;
       } else {
         router.replace({ name: "Login" });
-        return null;
+        return user.value;
       }
     } else {
       return user.value;
@@ -29,17 +32,20 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.setItem(userKey, JSON.stringify(u));
     user.value = u;
   }
-  async function login(u: IoUser) {
+  function login(u: IoUser) {
     if (user.value) {
       if (user.value.userInfo.userId === u.userInfo.userId) return;
-      else await logout(false);
+      else clearUser();
     }
     setUser(u);
   }
-
-  async function logout(replace = true) {
+  function clearUser() {
     localStorage.clear();
     user.value = null;
+  }
+
+  async function logout(replace = true) {
+    clearUser();
     const auth = getAuth();
     await signOut(auth);
     if (replace) router.replace({ name: "Login" }); //   this.$http.get("https://www.naver.com");

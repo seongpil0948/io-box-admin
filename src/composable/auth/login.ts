@@ -10,8 +10,7 @@ import {
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store";
 import { useMessage } from "naive-ui";
-import { IoUser, USER_DB, USER_PROVIDER } from "@/composable";
-import { intervalToDuration } from "date-fns";
+import { USER_DB, USER_PROVIDER } from "@/composable";
 import { analytics } from "@/plugin/firebase";
 import { logEvent } from "@firebase/analytics";
 
