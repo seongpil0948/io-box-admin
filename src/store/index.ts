@@ -1,4 +1,5 @@
 export * from "./common";
+export * from "./auth";
 
 import { createPinia } from "pinia";
 import router from "@/plugin/router";

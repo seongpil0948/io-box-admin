@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, toRefs } from "vue";
 import type { MenuOption } from "naive-ui";
+import { useAuthStore } from "@/store";
 
 const props = defineProps<{
   menuOptions: MenuOption[];
 }>();
 const { menuOptions } = toRefs(props);
 const collapsed = ref(false);
+const auth = useAuthStore();
 </script>
 
 <template>
@@ -26,6 +28,7 @@ const collapsed = ref(false);
         size="3.5rem"
         style="padding-top: 0.5rem"
       />
+      <n-p v-if="auth.currUser">{{ auth.currUser.name }} 님 반갑습니다.</n-p>
       <n-h2
         :style="`${
           collapsed ? 'transform: skew(-9deg, 33deg);' : 'none'
