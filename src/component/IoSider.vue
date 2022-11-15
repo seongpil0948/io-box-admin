@@ -55,6 +55,7 @@ async function onLogout() {
         :src="auth.currUser.userInfo.profileImg"
       />
       <n-text v-if="auth.currUser">
+        <!-- FIXME: affected by interface(it use getter) -->
         {{ auth.currUser.name }}
       </n-text>
 

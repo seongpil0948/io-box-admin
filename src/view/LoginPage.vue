@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { createUserWithEmailAndPassword, getAuth } from "@firebase/auth";
+// import { createUserWithEmailAndPassword, getAuth } from "@firebase/auth";
 import { NSpace, useMessage } from "naive-ui";
 import { LoginReturn, LoginView } from "@io-boxies/vue-lib";
 import { useAuthStore } from "@/store";
