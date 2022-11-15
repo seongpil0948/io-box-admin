@@ -42,18 +42,13 @@ export function useLogin() {
     console.debug("USER_DB.getUserById: ", user, "Uid: ", uid);
     if (user) {
       if (user.userInfo.passed) {
-        await authS.login(user);
-        router.push({ name: "Login" });
+        await authS.login(user, true);
       } else {
         msg.error("관리자가 검토중인 계정입니다.");
         authS.logout();
       }
     } else {
-      if (toSignUp)
-        router.push({
-          name: "SignUp",
-          state: params as { [k: string]: any },
-        });
+      msg.error("회원가입후 이용해주세요~");
     }
   }
 

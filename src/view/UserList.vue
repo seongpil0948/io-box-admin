@@ -142,7 +142,14 @@ const columns: DataTableColumns<UserCombined> = [
 </script>
 <template>
   <n-h1>인아웃박스 유저목록. ({{ users.length }})</n-h1>
-  <n-data-table :columns="columns" :data="data" />
+  <n-data-table
+    :columns="columns"
+    :data="data"
+    :pagination="{
+      'show-size-picker': true,
+      'page-sizes': [5, 10, 25, 50, 100],
+    }"
+  />
   <n-modal :show="showEditModal" @update:show="updateModal" v-if="target">
     <n-card style="width: 600px" title="유저정보수정" :bordered="false">
       <n-space justify="space-between">

@@ -1,16 +1,18 @@
 import { IoUser } from "@/composable";
 import router from "@/plugin/router";
-import { getAuth, signOut } from "firebase/auth";
+import { getAuth, signOut } from "@firebase/auth";
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 
 const userKey = "user";
 export const useAuthStore = defineStore("auth", () => {
   console.log(`=== called useAuthStore === `);
-  const user = ref<null | IoUser>();
+  // const user = ref<null | any>();
+  const user = ref<null | any>();
+  const auth = getAuth();
 
   const currUser = computed(() => {
-    if (user.value === null) {
+    if (!user.value) {
       const userStr = localStorage.getItem(userKey);
       if (userStr) {
         const u = IoUser.fromJson(JSON.parse(userStr));
@@ -28,16 +30,23 @@ export const useAuthStore = defineStore("auth", () => {
     }
   });
 
-  function setUser(u: IoUser) {
+  // onAuthStateChanged(auth, (user) => {
+  //   console.log("onAuthStateChanged: ", user);
+  // });
+
+  function setUser(u: any) {
     localStorage.setItem(userKey, JSON.stringify(u));
     user.value = u;
   }
-  function login(u: IoUser) {
+  function login(u: any, goHome: boolean) {
     if (user.value) {
       if (user.value.userInfo.userId === u.userInfo.userId) return;
       else clearUser();
     }
     setUser(u);
+    if (goHome) {
+      router.push({ name: "home" });
+    }
   }
   function clearUser() {
     localStorage.clear();
@@ -46,7 +55,6 @@ export const useAuthStore = defineStore("auth", () => {
 
   async function logout(replace = true) {
     clearUser();
-    const auth = getAuth();
     await signOut(auth);
     if (replace) router.replace({ name: "Login" }); //   this.$http.get("https://www.naver.com");
   }

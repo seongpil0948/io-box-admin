@@ -105,7 +105,7 @@ export class IoUser extends CommonField implements IoUserCRT {
       true,
       IoUser.fireConverter()
     );
-    if (login) await authS.login(this);
+    if (login) authS.login(this, false);
   }
   static async getFcmToken() {
     const messaging = getMessaging();

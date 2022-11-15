@@ -9,6 +9,10 @@ const props = defineProps<{
 const { menuOptions } = toRefs(props);
 const collapsed = ref(false);
 const auth = useAuthStore();
+
+async function onLogout() {
+  await auth.logout();
+}
 </script>
 
 <template>
@@ -16,7 +20,7 @@ const auth = useAuthStore();
     bordered
     show-trigger
     collapse-mode="width"
-    :collapsed-width="64"
+    :collapsed-width="100"
     :width="240"
     :native-scrollbar="false"
     v-model:collapsed="collapsed"
@@ -28,7 +32,7 @@ const auth = useAuthStore();
         size="3.5rem"
         style="padding-top: 0.5rem"
       />
-      <n-p v-if="auth.currUser">{{ auth.currUser.name }} 님 반갑습니다.</n-p>
+
       <n-h2
         :style="`${
           collapsed ? 'transform: skew(-9deg, 33deg);' : 'none'
@@ -36,12 +40,25 @@ const auth = useAuthStore();
         >InOut BOX</n-h2
       >
     </n-space>
-
     <n-divider />
     <n-menu
       :collapsed-width="64"
       :collapsed-icon-size="22"
       :options="menuOptions"
     />
+    <n-divider />
+    <n-space vertical justify="center" align="center">
+      <n-avatar
+        v-if="auth.currUser && auth.currUser.userInfo.profileImg"
+        round
+        size="large"
+        :src="auth.currUser.userInfo.profileImg"
+      />
+      <n-text v-if="auth.currUser">
+        {{ auth.currUser.name }}
+      </n-text>
+
+      <n-button @click="onLogout">Sign out</n-button>
+    </n-space>
   </n-layout-sider>
 </template>

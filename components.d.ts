@@ -18,6 +18,7 @@ declare module '@vue/runtime-core' {
     LoginPage: typeof import('./src/view/LoginPage.vue')['default']
     LogoImage: typeof import('./src/component/LogoImage.vue')['default']
     MainView: typeof import('./src/view/MainView.vue')['default']
+    NAvatar: typeof import('naive-ui')['NAvatar']
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
     NDataTable: typeof import('naive-ui')['NDataTable']
