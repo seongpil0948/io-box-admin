@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { CsPost, POST_TYPE, useCsList, USER_ROLE } from "@/composable";
 import { formatDate, loadDate } from "@io-boxies/js-lib";
-import { table } from "console";
 import {
   NText,
   NSpace,
@@ -146,8 +145,8 @@ async function onPosted() {
       :columns="columns"
       :data="posts"
       :pagination="{
-        'show-size-picker': true,
-        'page-sizes': [5, 10, 25, 50],
+        showSizePicker: true,
+        pageSizes: [5, 10, 25, 50],
       }"
     />
   </n-space>

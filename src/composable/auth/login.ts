@@ -13,14 +13,6 @@ import { USER_DB, USER_PROVIDER } from "@/composable";
 import { analytics } from "@/plugin/firebase";
 import { logEvent } from "@firebase/analytics";
 
-interface SignupParam {
-  providerId: USER_PROVIDER;
-  userId?: string;
-  userName?: string;
-  email?: string;
-  profileImg?: string;
-}
-
 export function useLogin() {
   const inst = getCurrentInstance();
   const auth = getAuth();
