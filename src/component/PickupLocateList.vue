@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { getIoCollection } from "@/util";
 import { Locate, LocateCRT } from "@/composable";
 import { ref } from "vue";
 import { onSnapshot, setDoc, doc, deleteDoc } from "@firebase/firestore";
 import { useMessage } from "naive-ui";
+import { getIoCollection } from "@io-boxies/js-lib";
 
 const locates = ref<Locate[]>([]);
 const msg = useMessage();

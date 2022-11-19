@@ -1,5 +1,4 @@
 import { IoUser, UserDB, USER_PROVIDER, USER_ROLE } from "@/composable";
-import { batchInQuery, getIoCollection, IoCollection } from "@/util";
 import { UserCredential } from "@firebase/auth";
 import {
   getDocs,
@@ -9,6 +8,7 @@ import {
   doc,
   getDoc,
 } from "@firebase/firestore";
+import { getIoCollection, IoCollection, batchInQuery } from "@io-boxies/js-lib";
 
 export const UserFB: UserDB = {
   getUsersByRole: async function (role: USER_ROLE): Promise<IoUser[]> {

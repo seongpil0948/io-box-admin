@@ -7,11 +7,13 @@ import {
   IO_PAY_DB,
   USER_ROLE,
 } from "@/composable";
-import { getIoCollection, IoCollection } from "@/util";
 import { getDocs } from "@firebase/firestore";
+import { getIoCollection, getUserName, IoCollection } from "@io-boxies/js-lib";
+import { useAlarm } from "@io-boxies/vue-lib";
 import { DataTableColumns, NButton, NTag, useMessage } from "naive-ui";
 import { onBeforeMount, ref, h, computed } from "vue";
 
+const { sendAlarm } = useAlarm();
 const users = ref<IoUser[]>([]);
 const msg = useMessage();
 const payList = IO_PAY_DB.getIoPaysListen();
@@ -64,7 +66,20 @@ async function onPasseUpdate(user: UserCombined) {
   user.userInfo.passed = !user.userInfo.passed;
   const u = new IoUser(user);
   u.update()
-    .then(() => msg.success("수정완료"))
+    .then(async () => {
+      msg.success("수정완료");
+      if (user.userInfo.passed) {
+        await sendAlarm({
+          toUserIds: [user.userInfo.userId],
+          subject: `inoutbox 회원 승인 알림.`,
+          body: `<p> ${getUserName(
+            user
+          )}님 계정 승인이 완료 되었습니다!</p> <p> 즐거운 이용 되세요!</p>`,
+          notiLoadUri: "/",
+          uriArgs: {},
+        });
+      }
+    })
     .catch(() => msg.error("수정실패"));
 }
 const columns: DataTableColumns<UserCombined> = [

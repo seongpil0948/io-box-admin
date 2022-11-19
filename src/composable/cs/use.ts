@@ -1,8 +1,8 @@
 import { csPostFireConverter } from "@/composable";
 import { onBeforeMount, ref } from "vue";
 import { CsPost } from "./domain";
-import { getIoCollection } from "@/util";
 import { deleteDoc, doc, getDocs, orderBy, query } from "firebase/firestore";
+import { getIoCollection } from "@io-boxies/js-lib";
 export function useCsList() {
   const postCollection = getIoCollection({ c: "CS_POST" }).withConverter(
     csPostFireConverter

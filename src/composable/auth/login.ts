@@ -7,7 +7,6 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
-import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store";
 import { useMessage } from "naive-ui";
 import { USER_DB, USER_PROVIDER } from "@/composable";
@@ -24,7 +23,6 @@ interface SignupParam {
 
 export function useLogin() {
   const inst = getCurrentInstance();
-  const router = useRouter();
   const auth = getAuth();
   //   auth.languageCode = "ko";
   auth.useDeviceLanguage();
@@ -37,7 +35,7 @@ export function useLogin() {
   provider.addScope("https://www.googleapis.com/auth/userinfo.email");
   provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
 
-  async function login(uid: string, params: SignupParam, toSignUp = true) {
+  async function login(uid: string) {
     const user = await USER_DB.getUserById(uid);
     console.debug("USER_DB.getUserById: ", user, "Uid: ", uid);
     if (user) {
@@ -62,13 +60,7 @@ export function useLogin() {
         console.log("credential: ", credential, "user: ", user);
 
         if (loginAfter) {
-          login(user.uid, {
-            providerId: "GOOGLE",
-            userId: user.uid,
-            userName: user.displayName ?? "",
-            email: user.email ?? "",
-            profileImg: user.photoURL ?? "",
-          });
+          login(user.uid);
         }
         return user;
       })
@@ -125,16 +117,7 @@ export function useLogin() {
                     console.error(null, "카카오 채널목록 에러: ", error);
                   },
                 });
-                login(uc.user.uid, {
-                  userId: uc.user.uid,
-                  userName: uc.user.displayName ?? undefined,
-                  email: res.kakao_account.email,
-                  profileImg:
-                    res.properties && res.properties.profile_image
-                      ? res.properties.profile_image
-                      : "/img/io-coin.png",
-                  providerId: USER_PROVIDER.KAKAO,
-                });
+                login(uc.user.uid);
               })
               .catch((error) => {
                 if (error.code) {

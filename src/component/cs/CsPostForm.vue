@@ -9,11 +9,11 @@ import {
 import { postTypeOpt } from "@/composable/cs/constant";
 import { computed, ref, toRefs, watch } from "vue";
 import { useEditor } from "@/plugin/editor";
-import { getIoCollection } from "@/util";
 import { doc, setDoc } from "@firebase/firestore";
 import { uuidv4 } from "@firebase/util";
-import { useMessage } from "naive-ui";
+import { NButton, NCard, NInput, NSelect, NSpace, useMessage } from "naive-ui";
 import { useRouter } from "vue-router";
+import { getIoCollection } from "@io-boxies/js-lib";
 const props = defineProps<{
   post?: CsPost;
 }>();

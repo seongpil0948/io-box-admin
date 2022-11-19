@@ -1,4 +1,4 @@
-import { loadDate } from "@/util";
+import { loadDate } from "@io-boxies/js-lib";
 import {
   FirestoreDataConverter,
   DocumentSnapshot,

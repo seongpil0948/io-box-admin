@@ -1,4 +1,3 @@
-import { getIoCollection, IoCollection } from "@/util";
 import {
   doc,
   DocumentSnapshot,
@@ -6,6 +5,7 @@ import {
   onSnapshot,
   setDoc,
 } from "@firebase/firestore";
+import { getIoCollection, IoCollection } from "@io-boxies/js-lib";
 import { ref } from "vue";
 import { PaymentDB, IoPay } from "..";
 

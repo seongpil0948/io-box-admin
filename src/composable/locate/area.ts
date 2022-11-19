@@ -1,5 +1,5 @@
 import { shipAreas } from "@/asset/administrationAreas";
-import { uniqueFilter } from "@/util";
+import { uniqueFilter } from "@io-boxies/js-lib";
 import { computed } from "vue";
 
 export function useAdminArea() {

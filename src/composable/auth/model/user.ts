@@ -13,7 +13,6 @@ import {
 } from "@/composable";
 import { CommonField } from "../../common/model";
 import { useAuthStore } from "@/store";
-import { insertById, getIoCollection, IoCollection, loadDate } from "@/util";
 import { UserCredential } from "@firebase/auth";
 import { getMessaging, getToken } from "@firebase/messaging";
 import {
@@ -21,6 +20,12 @@ import {
   DocumentSnapshot,
   FirestoreDataConverter,
 } from "firebase/firestore";
+import {
+  insertById,
+  getIoCollection,
+  IoCollection,
+  loadDate,
+} from "@io-boxies/js-lib";
 
 export const getUserLocate = (u: IoUserCRT) => {
   if (!u.companyInfo || u.companyInfo.locations.length < 1) return null;
