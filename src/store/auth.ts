@@ -1,21 +1,22 @@
-import { IoUser } from "@/composable";
 import router from "@/plugin/router";
 import { getAuth, signOut } from "@firebase/auth";
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import { userFromJson } from "@io-boxies/js-lib";
+import { ioFire } from "@/plugin/firebase";
 
 const userKey = "user";
 export const useAuthStore = defineStore("auth", () => {
   console.log(`=== called useAuthStore === `);
   // const user = ref<null | any>();
   const user = ref<null | any>();
-  const auth = getAuth();
+  const auth = getAuth(ioFire.app);
 
   const currUser = computed(() => {
     if (!user.value) {
       const userStr = localStorage.getItem(userKey);
       if (userStr) {
-        const u = IoUser.fromJson(JSON.parse(userStr));
+        const u = userFromJson(JSON.parse(userStr));
         if (!u) {
           router.replace({ name: "Login" });
         }

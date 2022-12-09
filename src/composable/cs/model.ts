@@ -1,10 +1,10 @@
-import { loadDate } from "@io-boxies/js-lib";
+import { loadDate } from "@/util/date";
+import { commonToJson, USER_ROLE } from "@io-boxies/js-lib";
 import {
   FirestoreDataConverter,
   DocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
-import { USER_ROLE } from "../auth";
 import { CsPost } from "./domain";
 
 export function csFromJson(data: { [x: string]: any }): CsPost | null {
@@ -20,7 +20,7 @@ export function csFromJson(data: { [x: string]: any }): CsPost | null {
 }
 export const csPostFireConverter: FirestoreDataConverter<CsPost | null> = {
   toFirestore: (post: CsPost) => {
-    return JSON.parse(JSON.stringify(post));
+    return commonToJson(post);
   },
   fromFirestore: (
     snapshot: DocumentSnapshot<DocumentData>,

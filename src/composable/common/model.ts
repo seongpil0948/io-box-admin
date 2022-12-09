@@ -1,4 +1,4 @@
-import { getCurrDate } from "@io-boxies/js-lib";
+import { dateToTimeStamp } from "@/util/date";
 
 export class CommonField {
   createdAt?: Date;
@@ -13,13 +13,16 @@ export class CommonField {
   static toJson(c: any) {
     const dateKeys: string[] = [];
     Object.entries(c).forEach(([k, v]) => {
-      if (Object.prototype.toString.call(v) === "[object Date]") {
+      if (
+        v instanceof Date ||
+        Object.prototype.toString.call(v) === "[object Date]"
+      ) {
         dateKeys.push(k);
       }
     });
     const j = JSON.parse(JSON.stringify(c));
     dateKeys.forEach((dk) => {
-      j[dk] = dateToJson(j[dk]);
+      j[dk] = dateToTimeStamp(j[dk]);
     });
     return j;
   }
@@ -28,15 +31,4 @@ export class CommonField {
   }
   // public abstract copyWith(d: any): T;
   // public abstract fromJson(d: any): T;
-}
-
-function dateToJson(data: string | Date | undefined): string {
-  if (!data) return getCurrDate();
-  else if (typeof data === "string") {
-    return data;
-  } else if (data instanceof Date) {
-    return data.toJSON();
-  } else {
-    throw new Error("not Matched condition in dateToJson of commonField  ");
-  }
 }

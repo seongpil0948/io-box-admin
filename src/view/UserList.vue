@@ -1,26 +1,27 @@
 <script setup lang="ts">
+import { IoPay, IoPayCRT, IO_PAY_DB } from "@/composable";
 import {
-  IoPay,
-  IoPayCRT,
   IoUser,
-  IoUserCRT,
-  IO_PAY_DB,
   USER_ROLE,
-} from "@/composable";
+  userFromJson,
+  USER_DB,
+  userFireConverter,
+} from "@io-boxies/js-lib";
 import { getDocs } from "@firebase/firestore";
 import { getIoCollection, getUserName, IoCollection } from "@io-boxies/js-lib";
 import { useAlarm } from "@io-boxies/vue-lib";
 import { DataTableColumns, NButton, NTag, useMessage } from "naive-ui";
 import { onBeforeMount, ref, h, computed } from "vue";
+import { useSearch } from "@/composable/common/search";
 
 const { sendAlarm } = useAlarm();
 const users = ref<IoUser[]>([]);
 const msg = useMessage();
 const payList = IO_PAY_DB.getIoPaysListen();
-interface UserCombined extends IoUserCRT, IoPayCRT {}
+interface UserCombined extends IoUser, IoPayCRT {}
 const data = computed(() => {
   const u: UserCombined[] = [];
-  for (let i = 0; i < users.value.length; i++) {
+  for (let i = 0; i < searchedData.value.length; i++) {
     const user = users.value[i];
     const uid = user.userInfo.userId;
     const pay =
@@ -37,10 +38,12 @@ function updateModal(value: boolean) {
   }
 }
 async function submitModal() {
-  if (!target.value) return msg.error("target UserCombined is null");
-  const u = new IoUser(target.value);
+  if (!target.value) return msg.error("다시시도");
+  const u = userFromJson(target.value);
+  if (!u) return msg.error("다시시도");
   const pay = new IoPay(target.value);
-  Promise.all([u.update(), pay.update()])
+
+  Promise.all([USER_DB.updateUser(u), pay.update()])
     .then(() => {
       msg.info("성공");
       target.value = null;
@@ -49,7 +52,7 @@ async function submitModal() {
 }
 async function getUsers() {
   const c = getIoCollection({ c: IoCollection.USER }).withConverter(
-    IoUser.fireConverter()
+    userFireConverter
   );
   const snap = await getDocs(c);
   snap.docs.forEach((d) => {
@@ -59,13 +62,24 @@ async function getUsers() {
     }
   });
 }
+const { search, searchedData, searchInputVal } = useSearch({
+  data: users,
+  filterFunc: (x, searchVal) => {
+    const v: typeof searchVal = searchVal;
+    return v === null
+      ? true
+      : ((getUserName(x).includes(v) ||
+          x.userInfo.userId.includes(v) ||
+          (x.userInfo.email && x.userInfo.email.includes(v))) as boolean);
+  },
+});
+
 onBeforeMount(async () => {
   await getUsers();
 });
 async function onPasseUpdate(user: UserCombined) {
   user.userInfo.passed = !user.userInfo.passed;
-  const u = new IoUser(user);
-  u.update()
+  USER_DB.updateUser(user)
     .then(async () => {
       msg.success("수정완료");
       if (user.userInfo.passed) {
@@ -156,18 +170,33 @@ const columns: DataTableColumns<UserCombined> = [
 ];
 </script>
 <template>
-  <n-h1>인아웃박스 유저목록. ({{ users.length }})</n-h1>
-  <n-data-table
-    :columns="columns"
-    :data="data"
-    :pagination="{
-      'show-size-picker': true,
-      'page-sizes': [5, 10, 25, 50, 100],
-    }"
-  />
+  <n-card>
+    <template #header> 인아웃박스 유저목록. ({{ users.length }}) </template>
+    <template #header-extra>
+      <n-input v-model:value="searchInputVal" placeholder="상품검색" />
+      <n-button @click="search"> 검색 </n-button>
+    </template>
+    <n-data-table
+      :columns="columns"
+      :data="data"
+      :bordered="false"
+      :pagination="{
+        'show-size-picker': true,
+        'page-sizes': [5, 10, 25, 50, 100],
+      }"
+    />
+  </n-card>
   <n-modal :show="showEditModal" @update:show="updateModal" v-if="target">
     <n-card style="width: 600px" title="유저정보수정" :bordered="false">
       <n-space justify="space-between">
+        <n-text type="info"> 유저 ID </n-text>
+        <n-text> {{ target.userInfo.userId }} </n-text>
+      </n-space>
+      <n-space style="margin-top: 1vh" justify="space-between">
+        <n-text type="info"> 유저 </n-text>
+        <n-text> {{ getUserName(target) ?? target.userInfo.email }} </n-text>
+      </n-space>
+      <n-space style="margin-top: 1vh" justify="space-between">
         <n-text type="info"> 코인 </n-text>
         <n-input-number v-model:value="target.budget" :min="0" />
       </n-space>

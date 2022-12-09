@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "jsx": "preserve" ,
+    "jsx": "preserve",
     "module": "esnext",
     "strict": true,
     "moduleResolution": "node",
@@ -14,12 +14,19 @@
     "useDefineForClassFields": true,
     "sourceMap": true,
     "baseUrl": ".",
+    "rootDirs": [
+      "src/",
+      "lib"
+    ],
     "types": [
       "webpack-env"
     ],
     "paths": {
       "@/*": [
         "src/*"
+      ],
+      "@io-boxies/js-lib": [
+        "node_modules/@io-boxies/js-lib"
       ]
     },
     "lib": [
@@ -37,6 +44,7 @@
     "tests/**/*.tsx"
   ],
   "exclude": [
-    "node_modules", "src-back"
+    "node_modules",
+    "src-back"
   ]
 }

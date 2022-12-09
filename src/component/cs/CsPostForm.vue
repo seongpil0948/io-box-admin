@@ -4,7 +4,6 @@ import {
   csPostFireConverter,
   FAQ_CATEGORIES,
   POST_TYPE,
-  USER_ROLE,
 } from "@/composable";
 import { postTypeOpt } from "@/composable/cs/constant";
 import { computed, ref, toRefs, watch } from "vue";
@@ -13,7 +12,7 @@ import { doc, setDoc } from "@firebase/firestore";
 import { uuidv4 } from "@firebase/util";
 import { NButton, NCard, NInput, NSelect, NSpace, useMessage } from "naive-ui";
 import { useRouter } from "vue-router";
-import { getIoCollection } from "@io-boxies/js-lib";
+import { getIoCollection, USER_ROLE } from "@io-boxies/js-lib";
 const props = defineProps<{
   post?: CsPost;
 }>();

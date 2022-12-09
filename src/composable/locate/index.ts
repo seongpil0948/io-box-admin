@@ -1,4 +1,5 @@
 export * from "./area";
+import { commonToJson } from "@io-boxies/js-lib";
 import {
   DocumentData,
   DocumentSnapshot,
@@ -101,9 +102,7 @@ export class Locate implements LocateCRT {
 
   static fireConverter(): FirestoreDataConverter<Locate | null> {
     return {
-      toFirestore: (l: Locate) => {
-        return JSON.parse(JSON.stringify(l));
-      },
+      toFirestore: (l: Locate) => commonToJson(l),
       fromFirestore: (
         snapshot: DocumentSnapshot<DocumentData>,
         options: any

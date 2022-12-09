@@ -4,9 +4,6 @@ import router from "./plugin/router";
 import { pinia } from "./store";
 import { ioFire } from "./plugin/firebase";
 
-Date.prototype.toJSON = function () {
-  return this.toISOString();
-};
 console.log("ENV: ", process.env);
 const app = createApp(App);
 app.use(pinia);

@@ -3,11 +3,12 @@
 import { NSpace, useMessage } from "naive-ui";
 import { LoginReturn, LoginView } from "@io-boxies/vue-lib";
 import { useAuthStore } from "@/store";
+import { ioFire } from "@/plugin/firebase";
 const msg = useMessage();
 const authS = useAuthStore();
 
 async function onLogin(data: LoginReturn | undefined) {
-  if (!data) return msg.error("no data");
+  if (!data) return msg.error("아이디 혹은 비밀번호가 틀렸습니다.");
   else if (data.wrongPassword) return msg.error("비밀번호가 틀렸습니다.");
   else if (data.toSignup) return msg.error("없는유저 입니다.");
   // else if (data.toSignup) {
@@ -62,6 +63,7 @@ async function onLogin(data: LoginReturn | undefined) {
 <template>
   <NSpace vertical justify="center" align="center" class="page-container">
     <LoginView
+      :fire-app="ioFire"
       kakao-img-other-path="icon-kakao-talk-black.png"
       kakao-img-path="/icon-kakao-talk.png"
       logo-img-path="/logo.png"
