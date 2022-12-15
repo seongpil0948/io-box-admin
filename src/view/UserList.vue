@@ -178,7 +178,7 @@ const columns: DataTableColumns<UserCombined> = [
     </template>
     <n-data-table
       :columns="columns"
-      :data="data"
+      :data="searchedData"
       :bordered="false"
       :pagination="{
         'show-size-picker': true,
