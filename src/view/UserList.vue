@@ -9,23 +9,39 @@ import {
 } from "@io-boxies/js-lib";
 import { getDocs } from "@firebase/firestore";
 import { getIoCollection, getUserName, IoCollection } from "@io-boxies/js-lib";
-import { useAlarm } from "@io-boxies/vue-lib";
-import { DataTableColumns, NButton, NTag, useMessage } from "naive-ui";
-import { onBeforeMount, ref, h, computed } from "vue";
-import { useSearch } from "@/composable/common/search";
+import { useAlarm, UserSearchResult, SearchUserAuto } from "@io-boxies/vue-lib";
+import {
+  DataTableColumns,
+  NButton,
+  NTag,
+  useMessage,
+  NInputNumber,
+} from "naive-ui";
+import { ref, h, computed, watch, shallowRef } from "vue";
 
 const { sendAlarm } = useAlarm();
 const users = ref<IoUser[]>([]);
 const msg = useMessage();
-const payList = IO_PAY_DB.getIoPaysListen();
+const payList: { [uid: string]: IoPay } = {};
+watch(
+  () => users.value,
+  async (us) => {
+    for (let i = 0; i < us.length; i++) {
+      const uid = us[i].userInfo.userId;
+      if (!payList[uid]) {
+        payList[uid] = await IO_PAY_DB.getIoPayByUser(uid);
+      }
+    }
+  }
+);
+
 interface UserCombined extends IoUser, IoPayCRT {}
 const data = computed(() => {
   const u: UserCombined[] = [];
-  for (let i = 0; i < searchedData.value.length; i++) {
+  for (let i = 0; i < users.value.length; i++) {
     const user = users.value[i];
     const uid = user.userInfo.userId;
-    const pay =
-      payList.value.find((x) => x.userId === uid) ?? IoPay.initial(uid);
+    const pay = payList[uid] ?? IoPay.initial(uid);
     u.push(Object.assign({}, pay, user));
   }
   return u;
@@ -50,10 +66,11 @@ async function submitModal() {
     })
     .catch((err) => msg.error(`실패! ${JSON.stringify(err)}`));
 }
-async function getUsers() {
-  const c = getIoCollection({ c: IoCollection.USER }).withConverter(
-    userFireConverter
-  );
+const c = getIoCollection({ c: IoCollection.USER }).withConverter(
+  userFireConverter
+);
+async function getAllUsers() {
+  users.value = [];
   const snap = await getDocs(c);
   snap.docs.forEach((d) => {
     const data = d.data();
@@ -62,21 +79,7 @@ async function getUsers() {
     }
   });
 }
-const { search, searchedData, searchInputVal } = useSearch({
-  data: users,
-  filterFunc: (x, searchVal) => {
-    const v: typeof searchVal = searchVal;
-    return v === null
-      ? true
-      : ((getUserName(x).includes(v) ||
-          x.userInfo.userId.includes(v) ||
-          (x.userInfo.email && x.userInfo.email.includes(v))) as boolean);
-  },
-});
 
-onBeforeMount(async () => {
-  await getUsers();
-});
 async function onPasseUpdate(user: UserCombined) {
   user.userInfo.passed = !user.userInfo.passed;
   USER_DB.updateUser(user)
@@ -168,17 +171,37 @@ const columns: DataTableColumns<UserCombined> = [
     key: "pendingBudget",
   },
 ];
+const resultSize = 20;
+const results = shallowRef<UserSearchResult[]>([]);
+function onResult(result: UserSearchResult[]) {
+  results.value = result;
+}
+async function loadResults() {
+  users.value = await USER_DB.getUserByIds(results.value.map((x) => x.id));
+}
 </script>
 <template>
   <n-card>
-    <template #header> 인아웃박스 유저목록. ({{ users.length }}) </template>
+    <template #header>
+      <n-space>
+        <n-button @click="getAllUsers">전체 유저 불러오기</n-button>
+        <SearchUserAuto
+          :search-size="resultSize"
+          env="io-prod"
+          @on-result="onResult"
+        />
+        <n-button @click="loadResults">검색</n-button>
+      </n-space>
+    </template>
     <template #header-extra>
-      <n-input v-model:value="searchInputVal" placeholder="상품검색" />
-      <n-button @click="search"> 검색 </n-button>
+      <n-space>
+        <n-text>검색 결과 개수 조정 </n-text>
+        <NInputNumber v-model:value="resultSize" />
+      </n-space>
     </template>
     <n-data-table
       :columns="columns"
-      :data="searchedData"
+      :data="data"
       :bordered="false"
       :pagination="{
         'show-size-picker': true,

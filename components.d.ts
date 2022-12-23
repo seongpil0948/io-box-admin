@@ -31,7 +31,6 @@ declare module '@vue/runtime-core' {
     NH2: typeof import('naive-ui')['NH2']
     NH3: typeof import('naive-ui')['NH3']
     NInput: typeof import('naive-ui')['NInput']
-    NInputNumber: typeof import('naive-ui')['NInputNumber']
     NLayout: typeof import('naive-ui')['NLayout']
     NLayoutSider: typeof import('naive-ui')['NLayoutSider']
     NLoadingBarProvider: typeof import('naive-ui')['NLoadingBarProvider']
