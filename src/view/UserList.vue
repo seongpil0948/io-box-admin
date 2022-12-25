@@ -18,6 +18,7 @@ import {
   NInputNumber,
 } from "naive-ui";
 import { ref, h, computed, watch, shallowRef } from "vue";
+import { API_URL } from "@/constants";
 
 const { sendAlarm } = useAlarm();
 const users = ref<IoUser[]>([]);
@@ -94,6 +95,8 @@ async function onPasseUpdate(user: UserCombined) {
           )}님 계정 승인이 완료 되었습니다!</p> <p> 즐거운 이용 되세요!</p>`,
           notiLoadUri: "/",
           uriArgs: {},
+          sendMailUri: `${API_URL}/mail/sendEmail`,
+          pushUri: `${API_URL}/msg/sendPush`,
         });
       }
     })

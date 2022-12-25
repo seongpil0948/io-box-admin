@@ -6,3 +6,5 @@ export const IO_COSTS = {
   REQ_ORDER: 1,
   APPROVE_ORDER: 2,
 };
+
+export const API_URL = "https://io-box.du.r.appspot.com";
