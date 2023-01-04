@@ -85,27 +85,38 @@ export default defineComponent({
           bool: {
             should: [
               {
-                multi_match: {
-                  query: input,
-                  fields: ["email", "id"],
+                match: {
+                  email: {
+                    query: input,
+                    fuzziness: 1,
+                  },
                 },
               },
               {
                 fuzzy: {
                   username: {
                     value: input,
-                    fuzziness: "AUTO",
-                    max_expansions: 10,
-                    transpositions: true,
-                    rewrite: "constant_score",
+                    fuzziness: 2,
                   },
                 },
               },
+              {
+                match: {
+                  id: input,
+                },
+              },
+              // {
+              //   multi_match: {
+              //     query: input,
+              //     fields: ["email", "username"],
+              //     fuzziness: "1",
+              //   },
+              // },
             ],
           },
         };
         if (role.value) {
-          query.bool.must = [
+          query.bool.filter = [
             {
               match: { role: role.value },
             },

@@ -117,6 +117,10 @@ const columns: DataTableColumns<UserCombined> = [
     key: "userInfo.userName",
   },
   {
+    title: "메일",
+    key: "userInfo.email",
+  },
+  {
     title: "역할",
     key: "userInfo.role",
     render(row) {
