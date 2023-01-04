@@ -252,10 +252,7 @@ export default defineComponent({
                   <NTooltip>
                     {{
                       trigger: () => (
-                        <NAvatar
-                          round
-                          class="login-btn kakao-login-btn"
-                          style={kakaoBtnStyle}
+                        <div
                           onClick={async () => {
                             try {
                               this.$emit(
@@ -266,9 +263,15 @@ export default defineComponent({
                               this.$emit("onInternalError", e);
                             }
                           }}
-                          size="large"
-                          src={kakaoImgPath}
-                        />
+                        >
+                          <NAvatar
+                            round
+                            class="login-btn kakao-login-btn"
+                            style={kakaoBtnStyle}
+                            size="large"
+                            src={kakaoImgPath}
+                          />
+                        </div>
                       ),
                       default: () => "카카오톡 로그인",
                     }}
@@ -276,10 +279,7 @@ export default defineComponent({
                   <NTooltip>
                     {{
                       trigger: () => (
-                        <NAvatar
-                          round
-                          class="login-btn kakao-login-btn kakao-login-btn-other"
-                          style={kakaoBtnStyle}
+                        <div
                           onClick={async () => {
                             try {
                               this.$emit(
@@ -290,9 +290,15 @@ export default defineComponent({
                               this.$emit("onInternalError", e);
                             }
                           }}
-                          size="large"
-                          src={kakaoImgOtherPath}
-                        />
+                        >
+                          <NAvatar
+                            round
+                            class="login-btn kakao-login-btn kakao-login-btn-other"
+                            style={kakaoBtnStyle}
+                            size="large"
+                            src={kakaoImgOtherPath}
+                          />
+                        </div>
                       ),
                       default: () => "카카오톡 다른계정으로 로그인",
                     }}

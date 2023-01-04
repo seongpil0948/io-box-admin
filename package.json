@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "stg": "vue-cli-service serve --mode production",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "stg": "vue-cli-service serve --mode production"
   },
   "dependencies": {
     "@editorjs/editorjs": "^2.25.0",
@@ -16,6 +16,7 @@
     "@editorjs/table": "^2.0.4",
     "@io-boxies/js-lib": "0.1.3",
     "@io-boxies/vue-lib": "0.2.4",
+    "core-js": "^3.8.3",
     "date-fns": "^2.29.3",
     "firebase": "^9.9.3",
     "lodash.throttle": "^4.1.1",
@@ -32,6 +33,7 @@
     "@vicons/antd": "^0.12.0",
     "@vicons/carbon": "^0.12.0",
     "@vicons/material": "^0.12.0",
+    "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.8",
     "@vue/cli-plugin-router": "~5.0.8",
     "@vue/cli-plugin-typescript": "~5.0.8",
@@ -41,7 +43,7 @@
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-vue": "^8.0.3",
-    "naive-ui": "2.33.5",
+    "naive-ui": "2.34.3",
     "prettier": "^2.4.1",
     "typescript": "~4.9.4",
     "unplugin-vue-components": "^0.22.4"
