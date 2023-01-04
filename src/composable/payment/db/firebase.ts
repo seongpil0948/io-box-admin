@@ -1,3 +1,4 @@
+import { ioFireStore } from "@/plugin/firebase";
 import {
   doc,
   DocumentSnapshot,
@@ -53,7 +54,7 @@ async function getPayFromDoc(d: DocumentSnapshot<IoPay | null>, uid: string) {
 }
 
 function getPayCollection() {
-  return getIoCollection({ c: IoCollection.IO_PAY }).withConverter(
+  return getIoCollection(ioFireStore, { c: IoCollection.IO_PAY }).withConverter(
     IoPay.fireConverter()
   );
 }

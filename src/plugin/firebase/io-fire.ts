@@ -2,8 +2,11 @@ import {
   setPersistence,
   initializeAuth,
   browserSessionPersistence,
+  useDeviceLanguage,
 } from "firebase/auth";
 import { IoFireApp } from "@io-boxies/js-lib";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 export const ioFire = IoFireApp.getInst(
   // process.env.NODE_ENV === "production" ? "io-prod" : "io-dev"
@@ -16,8 +19,12 @@ export async function initIoFirebase() {
     "io-prod"
   );
   const auth = initializeAuth(ioFire.app);
+  useDeviceLanguage(auth);
   await setPersistence(auth, browserSessionPersistence);
 }
+export const ioFireStorage = getStorage(ioFire.app);
+
+export const ioFireStore = getFirestore(ioFire.app);
 
 // export const fbApp = initializeApp(firebaseConfig);
 // export const analytics = getAnalytics(fbApp);

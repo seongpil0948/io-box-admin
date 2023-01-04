@@ -3,10 +3,11 @@ import { onBeforeMount, ref } from "vue";
 import { CsPost } from "./domain";
 import { deleteDoc, doc, getDocs, orderBy, query } from "firebase/firestore";
 import { getIoCollection } from "@io-boxies/js-lib";
+import { ioFireStore } from "@/plugin/firebase";
 export function useCsList() {
-  const postCollection = getIoCollection({ c: "CS_POST" }).withConverter(
-    csPostFireConverter
-  );
+  const postCollection = getIoCollection(ioFireStore, {
+    c: "CS_POST",
+  }).withConverter(csPostFireConverter);
   const posts = ref<CsPost[]>([]);
   onBeforeMount(async () => {
     await getPosts();

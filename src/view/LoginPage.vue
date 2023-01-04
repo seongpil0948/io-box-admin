@@ -1,13 +1,21 @@
 <script setup lang="ts">
 // import { createUserWithEmailAndPassword, getAuth } from "@firebase/auth";
 import { NSpace, useMessage } from "naive-ui";
-import { LoginReturn, LoginView } from "@io-boxies/vue-lib";
+import { LoginReturn } from "@io-boxies/vue-lib";
 import { useAuthStore } from "@/store";
 import { API_URL } from "@/constants";
+import { ioFireStore } from "@/plugin/firebase";
+import { defineAsyncComponent } from "vue";
+
+const LoginView = defineAsyncComponent(
+  () => import("@/component/common/login/login-view")
+);
+
 const msg = useMessage();
 const authS = useAuthStore();
 
 async function onLogin(data: LoginReturn | undefined) {
+  console.log("LoginReturn: ", data);
   if (!data) return msg.error("아이디 혹은 비밀번호가 틀렸습니다.");
   else if (data.wrongPassword) return msg.error("비밀번호가 틀렸습니다.");
   else if (data.toSignup) return msg.error("없는유저 입니다.");
@@ -40,6 +48,7 @@ function onInternalError(err: any) {
 <template>
   <NSpace vertical justify="center" align="center" class="page-container">
     <LoginView
+      :store="ioFireStore"
       env="io-prod"
       :custom-token-url="`${API_URL}/auth/customToken`"
       kakao-img-other-path="icon-kakao-talk-black.png"
@@ -47,7 +56,7 @@ function onInternalError(err: any) {
       logo-img-path="/logo.png"
       @on-login="onLogin"
       @on-internal-error="onInternalError"
-    ></LoginView>
+    />
   </NSpace>
 </template>
 

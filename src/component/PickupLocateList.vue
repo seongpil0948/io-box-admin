@@ -4,12 +4,13 @@ import { ref } from "vue";
 import { onSnapshot, setDoc, doc, deleteDoc } from "@firebase/firestore";
 import { useMessage } from "naive-ui";
 import { getIoCollection } from "@io-boxies/js-lib";
+import { ioFireStore } from "@/plugin/firebase";
 
 const locates = ref<Locate[]>([]);
 const msg = useMessage();
-const locateCollection = getIoCollection({ c: "PICKUP_LOCATES" }).withConverter(
-  Locate.fireConverter()
-);
+const locateCollection = getIoCollection(ioFireStore, {
+  c: "PICKUP_LOCATES",
+}).withConverter(Locate.fireConverter());
 onSnapshot(locateCollection, (snapshot) => {
   locates.value = [];
   snapshot.forEach((s) => {

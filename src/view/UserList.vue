@@ -9,7 +9,7 @@ import {
 } from "@io-boxies/js-lib";
 import { getDocs } from "@firebase/firestore";
 import { getIoCollection, getUserName, IoCollection } from "@io-boxies/js-lib";
-import { useAlarm, UserSearchResult, SearchUserAuto } from "@io-boxies/vue-lib";
+import { useAlarm, UserSearchResult } from "@io-boxies/vue-lib";
 import {
   DataTableColumns,
   NButton,
@@ -17,8 +17,13 @@ import {
   useMessage,
   NInputNumber,
 } from "naive-ui";
-import { ref, h, computed, watch, shallowRef } from "vue";
+import { ref, h, computed, watch, shallowRef, defineAsyncComponent } from "vue";
 import { API_URL } from "@/constants";
+import { ioFireStore } from "@/plugin/firebase";
+
+const SearchUserAuto = defineAsyncComponent(
+  () => import("@/component/search-user-auto")
+);
 
 const { sendAlarm } = useAlarm();
 const users = ref<IoUser[]>([]);
@@ -60,14 +65,14 @@ async function submitModal() {
   if (!u) return msg.error("다시시도");
   const pay = new IoPay(target.value);
 
-  Promise.all([USER_DB.updateUser(u), pay.update()])
+  Promise.all([USER_DB.updateUser(ioFireStore, u), pay.update()])
     .then(() => {
       msg.info("성공");
       target.value = null;
     })
     .catch((err) => msg.error(`실패! ${JSON.stringify(err)}`));
 }
-const c = getIoCollection({ c: IoCollection.USER }).withConverter(
+const c = getIoCollection(ioFireStore, { c: IoCollection.USER }).withConverter(
   userFireConverter
 );
 async function getAllUsers() {
@@ -83,7 +88,7 @@ async function getAllUsers() {
 
 async function onPasseUpdate(user: UserCombined) {
   user.userInfo.passed = !user.userInfo.passed;
-  USER_DB.updateUser(user)
+  USER_DB.updateUser(ioFireStore, user)
     .then(async () => {
       msg.success("수정완료");
       if (user.userInfo.passed) {
@@ -180,7 +185,10 @@ function onResult(result: UserSearchResult[]) {
   results.value = result;
 }
 async function loadResults() {
-  users.value = await USER_DB.getUserByIds(results.value.map((x) => x.id));
+  users.value = await USER_DB.getUserByIds(
+    ioFireStore,
+    results.value.map((x) => x.id)
+  );
 }
 </script>
 <template>
@@ -189,9 +197,11 @@ async function loadResults() {
       <n-space>
         <n-button @click="getAllUsers">전체 유저 불러오기</n-button>
         <SearchUserAuto
-          :search-size="resultSize"
-          env="io-prod"
+          :store="ioFireStore"
           @on-result="onResult"
+          :search-size="resultSize"
+          :show-role-selector="false"
+          env="io-prod"
         />
         <n-button @click="loadResults">검색</n-button>
       </n-space>

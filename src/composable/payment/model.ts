@@ -1,4 +1,5 @@
 import { COIN_PAY_RATIO, COIN_FEE } from "@/constants";
+import { ioFireStore } from "@/plugin/firebase";
 import { commonToJson } from "@io-boxies/js-lib";
 import {
   loadDate,
@@ -83,7 +84,7 @@ export class IoPay extends CommonField implements IoPayCRT {
   async update() {
     await insertById<IoPay>(
       this,
-      getIoCollection({ c: IoCollection.IO_PAY }),
+      getIoCollection(ioFireStore, { c: IoCollection.IO_PAY }),
       this.userId,
       true,
       IoPay.fireConverter()

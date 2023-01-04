@@ -13,6 +13,7 @@ import { uuidv4 } from "@firebase/util";
 import { NButton, NCard, NInput, NSelect, NSpace, useMessage } from "naive-ui";
 import { useRouter } from "vue-router";
 import { getIoCollection, USER_ROLE } from "@io-boxies/js-lib";
+import { ioFireStore } from "@/plugin/firebase";
 const props = defineProps<{
   post?: CsPost;
 }>();
@@ -71,7 +72,9 @@ async function onPostSubmit() {
     allowRole: v.allowRole as USER_ROLE,
   };
   const docRef = doc(
-    getIoCollection({ c: "CS_POST" }).withConverter(csPostFireConverter),
+    getIoCollection(ioFireStore, { c: "CS_POST" }).withConverter(
+      csPostFireConverter
+    ),
     data.no
   );
   await setDoc(docRef, data);
