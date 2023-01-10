@@ -39,3 +39,5 @@ export const ioFireStore = getFirestore(ioFire.app);
 // };
 
 // export { ioFire, IoFire };
+
+export const deletedPath = (path: string) => `archive/deleted/${path}`;

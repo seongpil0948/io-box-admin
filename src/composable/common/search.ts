@@ -19,7 +19,6 @@ export function useElasticSearch(d: {
     const functions = getFunctions(ioFire.app, "asia-northeast3");
     const searchFunc = httpsCallable(functions, d.funcName);
     const param = d.makeParam(searchVal.value ?? "");
-    console.log("searchFunc param: ", param);
     return searchFunc({ searchParam: param })
       .then(d.onSearch)
       .catch((err) => console.error(`error in ${d.funcName}`, err));

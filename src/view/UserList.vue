@@ -7,7 +7,14 @@ import {
   USER_DB,
   userFireConverter,
 } from "@io-boxies/js-lib";
-import { getDocs } from "@firebase/firestore";
+import {
+  doc,
+  getDocs,
+  query,
+  QueryConstraint,
+  runTransaction,
+  where,
+} from "@firebase/firestore";
 import { getIoCollection, getUserName, IoCollection } from "@io-boxies/js-lib";
 import { useAlarm, UserSearchResult } from "@io-boxies/vue-lib";
 import {
@@ -16,10 +23,16 @@ import {
   NTag,
   useMessage,
   NInputNumber,
+  useDialog,
 } from "naive-ui";
 import { ref, h, computed, watch, shallowRef, defineAsyncComponent } from "vue";
 import { API_URL } from "@/constants";
-import { ioFireStore } from "@/plugin/firebase";
+import { deletedPath, ioFireStore } from "@/plugin/firebase";
+
+interface MigrateDoc {
+  doc: ReturnType<typeof doc>;
+  data: any;
+}
 
 const SearchUserAuto = defineAsyncComponent(
   () => import("@/component/search-user-auto")
@@ -107,19 +120,107 @@ async function onPasseUpdate(user: UserCombined) {
     })
     .catch(() => msg.error("수정실패"));
 }
+const dialog = useDialog();
+console.log("ioFireStore: ", ioFireStore);
+async function handleDelete(u: UserCombined) {
+  const d = dialog.warning({
+    title: `유저 ${getUserName(u)} 삭제`,
+    content: "real?",
+    positiveText: "real!",
+    negativeText: "cancel",
+    onPositiveClick: async () => {
+      d.loading = true;
+      const uid = u.userInfo.userId;
+      return new Promise((resolve) => {
+        runTransaction(ioFireStore, async (transaction) => {
+          const targets: MigrateDoc[] = [];
+
+          const cs = ["USER", "MAPPER", "IO_PAY"] as IoCollection[];
+          for (let i = 0; i < cs.length; i++) {
+            const c = getIoCollection(ioFireStore, { c: cs[i], uid });
+            const document = doc(c, uid);
+            const snap = await transaction.get(document);
+            if (snap.exists()) {
+              console.info(`data ${cs} exist`);
+              targets.push({ doc: document, data: snap.data() });
+            }
+          }
+          // 다 삭제 주의...
+          const verbose: { collection: IoCollection; field?: string }[] = [
+            { collection: "SHOP_PROD", field: "shopId" },
+            // { collection: "SHOP_PROD", field: "vendorId" }, 주문정보까지 삭제해야되서 이건 일단 제외
+            { collection: "VENDOR_PROD", field: "vendorId" },
+            { collection: "ORDER_PROD" },
+            { collection: "ORDER_PROD_NUMBER" },
+            { collection: "SHIPMENT" },
+            { collection: "USER_LOG" },
+            { collection: "TOKENS" },
+            { collection: "VIRTUAL_ORDER_PROD" },
+            { collection: "VIRTUAL_USER" },
+            { collection: "VIRTUAL_VENDOR_PROD" },
+          ];
+          for (let k = 0; k < verbose.length; k++) {
+            const v = verbose[k];
+            const targetC = getIoCollection(ioFireStore, {
+              c: v.collection,
+              uid: uid,
+            });
+            const constraints: QueryConstraint[] = [];
+            if (v.field) constraints.push(where(v.field, "==", uid));
+            const targetSnap = await getDocs(query(targetC, ...constraints));
+            console.info(`snap size: ${targetSnap.size} with`, v);
+            targetSnap.docs.forEach((d) => {
+              targets.push({ doc: doc(targetC, d.id), data: d.data() });
+            });
+          }
+
+          for (let j = 0; j < targets.length; j++) {
+            const md = targets[j];
+            console.log(
+              `path: ${md.doc.path} deletedPath: ${deletedPath(md.doc.path)}`
+            );
+            transaction.set(
+              doc(ioFireStore, deletedPath(md.doc.path)),
+              md.data
+            );
+            transaction.delete(md.doc);
+          }
+          return targets;
+        })
+          .then((d) => {
+            console.log("삭제성공: ", d);
+            msg.success("삭제성공");
+          })
+          .catch((err) => {
+            console.error(err);
+            msg.error(`삭제실패 ${JSON.stringify(err)}`);
+          })
+          .finally(() => resolve("onfinally: "));
+      });
+    },
+  });
+}
 const columns: DataTableColumns<UserCombined> = [
   {
-    title: "ID",
-    key: "userInfo.userId",
+    title: "삭제",
+    key: "delete user",
+    render: (row) =>
+      h(
+        NButton,
+        {
+          size: "small",
+          type: "error",
+          onClick: async () => await handleDelete(row),
+        },
+        {
+          default: () => "삭제",
+        }
+      ),
+    width: 100,
   },
-  {
-    title: "이름",
-    key: "userInfo.userName",
-  },
-  {
-    title: "메일",
-    key: "userInfo.email",
-  },
+  { title: "ID", key: "userInfo.userId", width: 200 },
+  { title: "이름", key: "userInfo.userName", width: 150 },
+  { title: "메일", key: "userInfo.email", width: 200 },
   {
     title: "역할",
     key: "userInfo.role",
@@ -127,10 +228,8 @@ const columns: DataTableColumns<UserCombined> = [
       return h(NTag, {}, { default: () => USER_ROLE[row.userInfo.role] });
     },
   },
-  {
-    title: "연락처",
-    key: "userInfo.phone",
-  },
+  { title: "가입경로", key: "userInfo.providerId" },
+  { title: "연락처", key: "userInfo.phone" },
   {
     title: "허가여부",
     key: "passed",
@@ -149,7 +248,7 @@ const columns: DataTableColumns<UserCombined> = [
     },
   },
   {
-    title: "",
+    title: "수정",
     key: "edit",
     render(row) {
       return h(
@@ -166,22 +265,10 @@ const columns: DataTableColumns<UserCombined> = [
       );
     },
   },
-  {
-    title: "회사이름",
-    key: "companyInfo.companyName",
-  },
-  {
-    title: "회사연락처",
-    key: "companyInfo.companyPhone",
-  },
-  {
-    title: "코인",
-    key: "budget",
-  },
-  {
-    title: "보류코인",
-    key: "pendingBudget",
-  },
+  { title: "회사이름", key: "companyInfo.companyName" },
+  { title: "회사연락처", key: "companyInfo.companyPhone" },
+  { title: "코인", key: "budget" },
+  { title: "보류코인", key: "pendingBudget" },
 ];
 const resultSize = 20;
 const results = shallowRef<UserSearchResult[]>([]);
@@ -217,6 +304,8 @@ async function loadResults() {
       </n-space>
     </template>
     <n-data-table
+      :table-layout="'fixed'"
+      :scroll-x="2400"
       :columns="columns"
       :data="data"
       :bordered="false"
