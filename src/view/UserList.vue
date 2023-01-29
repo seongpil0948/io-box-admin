@@ -28,6 +28,7 @@ import {
 import { ref, h, computed, watch, shallowRef, defineAsyncComponent } from "vue";
 import { API_URL } from "@/constants";
 import { deletedPath, ioFireStore } from "@/plugin/firebase";
+import { catchError } from "@/util";
 
 interface MigrateDoc {
   doc: ReturnType<typeof doc>;
@@ -118,7 +119,7 @@ async function onPasseUpdate(user: UserCombined) {
         });
       }
     })
-    .catch(() => msg.error("수정실패"));
+    .catch((err) => catchError({ err, msg, prefix: "유저 수정 실패" }));
 }
 const dialog = useDialog();
 console.log("ioFireStore: ", ioFireStore);
