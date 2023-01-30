@@ -6,6 +6,8 @@ import {
   userFromJson,
   USER_DB,
   userFireConverter,
+  getParentRef,
+  IoFireApp,
 } from "@io-boxies/js-lib";
 import {
   doc,
@@ -27,8 +29,9 @@ import {
 } from "naive-ui";
 import { ref, h, computed, watch, shallowRef, defineAsyncComponent } from "vue";
 import { API_URL } from "@/constants";
-import { deletedPath, ioFireStore } from "@/plugin/firebase";
+import { deletedPath, deleteFolder, ioFireStore } from "@/plugin/firebase";
 import { catchError } from "@/util";
+import { getStorage } from "@firebase/storage";
 
 interface MigrateDoc {
   doc: ReturnType<typeof doc>;
@@ -130,12 +133,17 @@ async function handleDelete(u: UserCombined) {
     positiveText: "real!",
     negativeText: "cancel",
     onPositiveClick: async () => {
+      console.log("in handleDelete");
       d.loading = true;
       const uid = u.userInfo.userId;
+      const userRef = getParentRef({
+        storage: getStorage(IoFireApp.getInst().app),
+        svc: "USER",
+        userId: uid,
+      });
       return new Promise((resolve) => {
         runTransaction(ioFireStore, async (transaction) => {
           const targets: MigrateDoc[] = [];
-
           const cs = ["USER", "MAPPER", "IO_PAY"] as IoCollection[];
           for (let i = 0; i < cs.length; i++) {
             const c = getIoCollection(ioFireStore, { c: cs[i], uid });
@@ -174,7 +182,6 @@ async function handleDelete(u: UserCombined) {
               targets.push({ doc: doc(targetC, d.id), data: d.data() });
             });
           }
-
           for (let j = 0; j < targets.length; j++) {
             const md = targets[j];
             console.log(
@@ -186,6 +193,7 @@ async function handleDelete(u: UserCombined) {
             );
             transaction.delete(md.doc);
           }
+          await deleteFolder(userRef);
           return targets;
         })
           .then((d) => {
@@ -196,7 +204,10 @@ async function handleDelete(u: UserCombined) {
             console.error(err);
             msg.error(`삭제실패 ${JSON.stringify(err)}`);
           })
-          .finally(() => resolve("onfinally: "));
+          .finally(() => {
+            resolve("onfinally: ");
+            d.loading = false;
+          });
       });
     },
   });
