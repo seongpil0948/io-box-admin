@@ -23,7 +23,8 @@
     "pinia": "^2.0.20",
     "uuid": "^8.3.2",
     "vue": "^3.2.45",
-    "vue-router": "^4.0.3"
+    "vue-router": "^4.0.3",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.2/xlsx-0.19.2.tgz"
   },
   "devDependencies": {
     "@types/lodash.throttle": "^4.1.7",

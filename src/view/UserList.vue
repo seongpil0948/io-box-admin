@@ -8,6 +8,8 @@ import {
   userFireConverter,
   getParentRef,
   IoFireApp,
+  uniqueArr,
+  locateToStr,
 } from "@io-boxies/js-lib";
 import {
   doc,
@@ -26,12 +28,15 @@ import {
   useMessage,
   NInputNumber,
   useDialog,
+  NDropdown,
 } from "naive-ui";
 import { ref, h, computed, watch, shallowRef, defineAsyncComponent } from "vue";
 import { API_URL } from "@/constants";
 import { deletedPath, deleteFolder, ioFireStore } from "@/plugin/firebase";
 import { catchError } from "@/util";
 import { getStorage } from "@firebase/storage";
+import { utils, writeFile } from "xlsx";
+import { useAuthStore } from "@/store";
 
 interface MigrateDoc {
   doc: ReturnType<typeof doc>;
@@ -42,6 +47,7 @@ const SearchUserAuto = defineAsyncComponent(
   () => import("@/component/search-user-auto")
 );
 
+const authStore = useAuthStore();
 const { sendAlarm } = useAlarm();
 const users = ref<IoUser[]>([]);
 const msg = useMessage();
@@ -102,7 +108,76 @@ async function getAllUsers() {
     }
   });
 }
+async function downloadUserOrder(row: UserCombined) {
+  const orderC = getIoCollection(ioFireStore, {
+    c: "ORDER_PROD",
+    uid: row.userInfo.userId,
+  });
+  const virUserC = getIoCollection(ioFireStore, {
+    c: "VIRTUAL_USER",
+    uid: row.userInfo.userId,
+  }).withConverter(userFireConverter);
+  users.value = [];
+  const virUserSnap = await getDocs(virUserC);
+  const virVendors = virUserSnap.docs.map((x) => x.data()).filter((x) => x);
 
+  const orderSnap = await getDocs(orderC);
+  const orders = orderSnap.docs.map((x) => x.data()).filter((x) => x);
+  const data = orders.flatMap((x) => x.items);
+  const vendors = await USER_DB.getUserByIds(
+    ioFireStore,
+    uniqueArr(data.map((d) => d.vendorId))
+  );
+
+  const u = authStore.currUser;
+  const uName = getUserName(u);
+  const vendorsById = [...vendors, ...virVendors].reduce((acc, v) => {
+    if (!v) return acc;
+    acc[v.userInfo.userId] = v;
+    return acc;
+  }, {} as { [k: string]: IoUser });
+  const json = data.reduce((acc, curr) => {
+    const vendor = vendorsById[curr.vendorId];
+    if (vendor) {
+      const locate =
+        vendor?.companyInfo?.shipLocate ?? vendor?.companyInfo?.locations[0];
+      acc.push({
+        소매처: uName,
+        도매처: getUserName(vendor),
+        주문개수: curr.orderCnt,
+        소매상품명: curr.shopProd.prodName,
+        도매상품명: curr.vendorProd.vendorProdName,
+        컬러: curr.vendorProd.color,
+        사이즈: curr.vendorProd.size,
+        미송수량: curr.pendingCnt,
+        도매가: curr.vendorProd.vendorPrice,
+        합계: curr.orderCnt * curr.vendorProd.vendorPrice,
+        "도매처 건물명": locate?.alias ?? "",
+        "도매처 상세주소": locate?.detailLocate ?? "",
+        "도매처 주소": locate ? locateToStr(locate) : "",
+        핸드폰번호: locate?.phone,
+      });
+    }
+    return acc;
+  }, [] as any[]);
+  const date = new Date();
+  const fileName = `${uName}_${date.toLocaleString()}.xlsx`;
+  const worksheet = utils.json_to_sheet(json);
+  const workbook = utils.book_new();
+  utils.book_append_sheet(workbook, worksheet, "Dates");
+  writeFile(workbook, fileName);
+}
+function onSelectMenu(key: string | number, row: UserCombined) {
+  msg.info(String(key));
+  switch (key) {
+    case "downloadOrder":
+      downloadUserOrder(row);
+      break;
+
+    default:
+      break;
+  }
+}
 async function onPasseUpdate(user: UserCombined) {
   user.userInfo.passed = !user.userInfo.passed;
   USER_DB.updateUser(ioFireStore, user)
@@ -229,6 +304,25 @@ const columns: DataTableColumns<UserCombined> = [
         }
       ),
     width: 100,
+  },
+  {
+    title: "메뉴",
+    key: "menu",
+    render: (row) =>
+      h(
+        NDropdown,
+        {
+          trigger: "hover",
+          onSelect: (k) => onSelectMenu(k, row),
+          options: [
+            {
+              label: "주문정보 다운",
+              key: "downloadOrder",
+            },
+          ],
+        },
+        { default: () => h(NButton, {}, { default: () => "선택끄" }) }
+      ),
   },
   { title: "ID", key: "userInfo.userId", width: 200 },
   { title: "이름", key: "userInfo.userName", width: 150 },
