@@ -29,6 +29,7 @@ import {
   NInputNumber,
   useDialog,
   NDropdown,
+  NSpace,
 } from "naive-ui";
 import { ref, h, computed, watch, shallowRef, defineAsyncComponent } from "vue";
 import { API_URL } from "@/constants";
@@ -51,30 +52,23 @@ const authStore = useAuthStore();
 const { sendAlarm } = useAlarm();
 const users = ref<IoUser[]>([]);
 const msg = useMessage();
-const payList: { [uid: string]: IoPay } = {};
+
+interface UserCombined extends IoUser, IoPayCRT {}
+const tableData = shallowRef<UserCombined[]>([]);
 watch(
   () => users.value,
   async (us) => {
+    const d: typeof tableData.value = [];
     for (let i = 0; i < us.length; i++) {
-      const uid = us[i].userInfo.userId;
-      if (!payList[uid]) {
-        payList[uid] = await IO_PAY_DB.getIoPayByUser(uid);
-      }
+      const user = us[i];
+      const uid = user.userInfo.userId;
+      const pay = (await IO_PAY_DB.getIoPayByUser(uid)) ?? IoPay.initial(uid);
+      d.push(Object.assign({}, user, pay));
     }
+    tableData.value = d;
   }
 );
 
-interface UserCombined extends IoUser, IoPayCRT {}
-const data = computed(() => {
-  const u: UserCombined[] = [];
-  for (let i = 0; i < users.value.length; i++) {
-    const user = users.value[i];
-    const uid = user.userInfo.userId;
-    const pay = payList[uid] ?? IoPay.initial(uid);
-    u.push(Object.assign({}, pay, user));
-  }
-  return u;
-});
 const target = ref<UserCombined | null>(null);
 const showEditModal = computed(() => target.value !== null);
 function updateModal(value: boolean) {
@@ -82,18 +76,52 @@ function updateModal(value: boolean) {
     target.value = null;
   }
 }
+
 async function submitModal() {
   if (!target.value) return msg.error("다시시도");
-  const u = userFromJson(target.value);
-  if (!u) return msg.error("다시시도");
+  const targetU = userFromJson(target.value);
+  if (!targetU) return msg.error("다시시도");
+  const existPay = await IO_PAY_DB.getIoPayByUser(targetU.userInfo.userId);
   const pay = new IoPay(target.value);
-
-  Promise.all([USER_DB.updateUser(ioFireStore, u), pay.update()])
-    .then(() => {
-      msg.info("성공");
-      target.value = null;
-    })
-    .catch((err) => msg.error(`실패! ${JSON.stringify(err)}`));
+  console.log("exist Pay: ", existPay);
+  console.log("new Pay: ", pay);
+  dialog.warning({
+    title: "정보 변경 확인",
+    content: () =>
+      h(
+        NSpace,
+        { vertical: true },
+        {
+          default: () => [
+            `변경전: 금액(${existPay.budget}), 보류금액(${existPay.pendingBudget})`,
+            `변경후: 금액(${pay.budget}), 보류금액(${pay.pendingBudget})`,
+          ],
+        }
+      ),
+    positiveText: "Sure",
+    negativeText: "Not Sure",
+    onPositiveClick: async () => {
+      pay.history.push({
+        userId: authStore.currUser.userInfo.userId,
+        amount: pay.budget - existPay.budget,
+        pendingAmount: pay.pendingBudget - existPay.pendingBudget,
+        state: "ADMIN_MODIFY",
+        tbd: {},
+      });
+      return Promise.all([
+        USER_DB.updateUser(ioFireStore, targetU),
+        pay.update(),
+      ])
+        .then(() => {
+          msg.info("성공");
+          target.value = null;
+        })
+        .catch((err) => msg.error(`실패! ${JSON.stringify(err)}`));
+    },
+    onNegativeClick: () => {
+      dialog.destroyAll();
+    },
+  });
 }
 const c = getIoCollection(ioFireStore, { c: IoCollection.USER }).withConverter(
   userFireConverter
@@ -413,7 +441,7 @@ async function loadResults() {
       :table-layout="'fixed'"
       :scroll-x="2400"
       :columns="columns"
-      :data="data"
+      :data="tableData"
       :bordered="false"
       :pagination="{
         'show-size-picker': true,

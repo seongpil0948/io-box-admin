@@ -1,4 +1,4 @@
-import { ioFireStore } from "@/plugin/firebase";
+// import { onFirestoreErr, onFirestoreCompletion } from "@/composable/common";
 import {
   doc,
   DocumentSnapshot,
@@ -9,28 +9,48 @@ import {
 import { getIoCollection, IoCollection } from "@io-boxies/js-lib";
 import { ref } from "vue";
 import { PaymentDB, IoPay } from "..";
+import { ioFireStore } from "@/plugin/firebase";
+import { onFirestoreErr, onFirestoreCompletion } from "@/util";
 
 export const IopayFB: PaymentDB = {
   getIoPayByUserListen: function (uid: string) {
     const userPay = ref<IoPay | null>(null);
     const docRef = getDocRef(uid);
-    onSnapshot(docRef, async (docData) => {
-      userPay.value = await getPayFromDoc(docData, uid);
-    });
-    return userPay;
+    const name = "getIoPayByUserListen snapshot";
+    const unsubscribe = onSnapshot(
+      docRef,
+      async (docData) => {
+        userPay.value = await getPayFromDoc(docData, uid);
+      },
+      async (err) => {
+        await onFirestoreErr(name, err);
+        throw err;
+      },
+      () => onFirestoreCompletion(name)
+    );
+    return { userPay, unsubscribe };
   },
   getIoPaysListen: function () {
     const usersPay = ref<IoPay[]>([]);
-    onSnapshot(getPayCollection(), async (snapshot) => {
-      usersPay.value = [];
-      snapshot.forEach((s) => {
-        const data = s.data();
-        if (data) {
-          usersPay.value.push(data);
-        }
-      });
-    });
-    return usersPay;
+    const name = "getIoPaysListen snapshot";
+    const unsubscribe = onSnapshot(
+      getPayCollection(),
+      async (snapshot) => {
+        usersPay.value = [];
+        snapshot.forEach((s) => {
+          const data = s.data();
+          if (data) {
+            usersPay.value.push(data);
+          }
+        });
+      },
+      async (err) => {
+        await onFirestoreErr(name, err);
+        throw err;
+      },
+      () => onFirestoreCompletion(name)
+    );
+    return { usersPay, unsubscribe };
   },
   getIoPayByUser: async function (uid: string) {
     const docRef = getDocRef(uid);
@@ -53,8 +73,7 @@ async function getPayFromDoc(d: DocumentSnapshot<IoPay | null>, uid: string) {
   return d.data()!;
 }
 
-function getPayCollection() {
-  return getIoCollection(ioFireStore, { c: IoCollection.IO_PAY }).withConverter(
+const getPayCollection = () =>
+  getIoCollection(ioFireStore, { c: IoCollection.IO_PAY }).withConverter(
     IoPay.fireConverter()
   );
-}

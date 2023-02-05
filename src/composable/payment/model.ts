@@ -1,5 +1,4 @@
 import { COIN_PAY_RATIO, COIN_FEE } from "@/constants";
-import { ioFireStore } from "@/plugin/firebase";
 import { commonToJson } from "@io-boxies/js-lib";
 import {
   loadDate,
@@ -10,6 +9,7 @@ import {
 import { DocumentData, DocumentSnapshot } from "firebase/firestore";
 import { CommonField } from "../common";
 import { IO_BANKS, IoPayCRT, PayHistoryCRT } from "./domain";
+import { ioFireStore } from "@/plugin/firebase";
 
 export class IoAccount {
   accountName: string;
@@ -47,10 +47,6 @@ export class IoPay extends CommonField implements IoPayCRT {
     this.pendingBudget = data.pendingBudget;
     this.history = data.history;
   }
-
-  get availBudget() {
-    return this.budget - this.pendingBudget;
-  }
   static initial(userId: string) {
     return new IoPay({
       userId,
@@ -69,15 +65,15 @@ export class IoPay extends CommonField implements IoPayCRT {
   static moneyToCoin(money: number) {
     if (money % COIN_PAY_RATIO !== 0)
       throw new Error(
-        `코인으로 변경시 금액은 ${COIN_PAY_RATIO} 으로 나뉘어져야 합니다.`
+        `금액으로 변경시 ${COIN_PAY_RATIO} 으로 나뉘어져야 합니다.`
       );
 
     return money / COIN_PAY_RATIO;
   }
 
   static fromJson(data: { [x: string]: any }): IoPay | null {
-    data.createdAt = loadDate(data.createdAt ?? new Date());
-    data.updatedAt = loadDate(data.updatedAt ?? new Date());
+    data.createdAt = loadDate(data.createdAt);
+    data.updatedAt = loadDate(data.updatedAt);
     return data ? new IoPay(data as IoPayCRT) : null;
   }
 
