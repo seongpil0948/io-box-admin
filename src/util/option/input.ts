@@ -3,7 +3,7 @@ import {
   CATEGORIES,
   FreeSize,
   GarmentSize,
-  GARMENT_SIZE,
+  PRODUCT_SIZE,
   LocateType,
   ShoesSize,
 } from "@/composable";
@@ -36,7 +36,7 @@ export const getCtgrOpts = (part: PART) =>
     return { label: x, value: x };
   });
 export const getSizeOpts = (part: PART) => {
-  let obj: GARMENT_SIZE[] = [];
+  let obj: PRODUCT_SIZE[] = [];
   if (
     part === PART.TOP ||
     part === PART.BOTTOM ||
