@@ -1,6 +1,7 @@
 import { PAID_INFO } from "@/composable/common";
-import { uniqueArr } from "@io-boxies/js-lib";
-import { refreshOrder } from ".";
+import { ioFireStore } from "@/plugin/firebase";
+import { getIoCollection, insertById, uniqueArr } from "@io-boxies/js-lib";
+import { orderFireConverter, refreshOrder } from ".";
 import { IoOrder, OrderItem, OrderItemCombined, ORDER_STATE } from "../domain";
 import {
   getPendingCnt,
@@ -10,6 +11,19 @@ import {
   getOrderItems,
 } from "./getter";
 import { isValidOrderItem, isValidOrder } from "./validate";
+
+export function updateOrder(order: IoOrder, shopId: string) {
+  return insertById<IoOrder>(
+    order,
+    getIoCollection(ioFireStore, {
+      c: "ORDER_PROD",
+      uid: shopId,
+    }),
+    order.dbId,
+    true,
+    orderFireConverter
+  );
+}
 
 export function setOrderCnt(d: {
   order: IoOrder;
