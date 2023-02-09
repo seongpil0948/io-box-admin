@@ -4,7 +4,7 @@ import { MenuOption, useLoadingBar, useMessage } from "naive-ui";
 import { watch, watchPostEffect } from "vue";
 import { renderIcon, renderRoute } from "@/util";
 import { UserMultiple, HelpDesk } from "@vicons/carbon";
-import { ShoppingBagTwotone } from "@vicons/material";
+import { LocalShippingOutlined, ShoppingBagTwotone } from "@vicons/material";
 // this view consumes Global State(common)
 const cs = useCommonStore();
 const loading = useLoadingBar();
@@ -49,6 +49,17 @@ const menuOptions: MenuOption[] = [
       {
         label: () => renderRoute("결제 확인", "OrderConfirmPayment"),
         key: "OrderConfirmPayment",
+      },
+    ],
+  },
+  {
+    icon: renderIcon(LocalShippingOutlined),
+    label: () => "Shipping Service",
+    key: "shipment",
+    children: [
+      {
+        label: () => renderRoute("주문 목록", "ShipmentList"),
+        key: "ShipmentList",
       },
     ],
   },

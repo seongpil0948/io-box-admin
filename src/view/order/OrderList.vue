@@ -102,22 +102,22 @@ const orderColumns: DataTableColumns<IoOrder> = [
   {
     type: "selection",
   },
-  // {
-  //   type: "expand",
-  //   // expandable: (rowData) => rowData.name !== "Jim Green",
-  //   renderExpand: (rowData) => {
-  //     return h(
-  //       NSpace,
-  //       {},
-  //       {
-  //         default: [
-  //           JSON.stringify(rowData.amount),
-  //           JSON.stringify(rowData.items),
-  //         ],
-  //       }
-  //     );
-  //   },
-  // },
+  {
+    type: "expand",
+    // expandable: (rowData) => rowData.name !== "Jim Green",
+    renderExpand: (rowData) => {
+      return h(
+        NSpace,
+        {},
+        {
+          default: [
+            JSON.stringify(rowData.amount),
+            JSON.stringify(rowData.items),
+          ],
+        }
+      );
+    },
+  },
   {
     title: "주문상태",
     key: "states",
