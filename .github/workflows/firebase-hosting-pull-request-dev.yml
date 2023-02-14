@@ -33,5 +33,5 @@ jobs:
           firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_IO_BOX }}"
           channelId: dev-preview
           projectId: io-box
-          target: io-box
+          target: io-box-admin
           expires: 3d
