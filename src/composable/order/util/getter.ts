@@ -1,7 +1,5 @@
+import { PAID_INFO, PAY_METHOD } from "@/composable";
 import { IoOrder, OrderItem } from "../domain";
-
-export const getPureAmount = (orderCnt: number, prodPrice: number) =>
-  orderCnt * prodPrice;
 
 export const getPendingCnt = (
   stockCnt: number,
@@ -15,19 +13,6 @@ export function getActiveCnt(orderCnt: number, pendingCnt: number) {
   else if (orderCnt - pendingCnt < 0) throw new Error("invalid cnt");
   return orderCnt - pendingCnt;
 }
-
-export const getOrderAmount = (a: {
-  pureAmount: number;
-  shipFeeAmount: number;
-  shipFeeDiscountAmount: number;
-  pickFeeAmount: number;
-  pickFeeDiscountAmount: number;
-  tax: number;
-}) =>
-  a.pureAmount +
-  (a.shipFeeAmount - a.shipFeeDiscountAmount) +
-  (a.pickFeeAmount - a.pickFeeDiscountAmount) +
-  a.tax;
 
 export function getOrderItems(d: {
   order: IoOrder;
@@ -63,3 +48,30 @@ export function isShipping(item: OrderItem) {
 }
 
 export const getTax = (amount: number) => Math.round(amount / 100) * 10;
+
+export function paidInfoToKo(p: PAID_INFO) {
+  switch (p) {
+    case "CREDIT":
+      return "외상";
+    case "EXACT":
+      return "결제완료";
+    case "NO":
+      return "미결제";
+    case "OVERCOME":
+      return "초과결제";
+
+    default:
+      throw new Error(`${p} is not matched in paidInfoToKo`);
+  }
+}
+export function payMethodToKo(p: PAY_METHOD) {
+  switch (p) {
+    case "CASH":
+      return "현금결제";
+    case "DEPOSIT":
+      return "계좌이체";
+
+    default:
+      throw new Error(`${p} is not matched in payMethodToKo`);
+  }
+}

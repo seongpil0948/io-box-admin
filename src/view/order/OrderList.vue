@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { ioFireStore } from "@/plugin/firebase";
 import { formatDate, getIoCollectionGroup, loadDate } from "@io-boxies/js-lib";
-import { IoOrder, orderFireConverter, ORDER_STATE } from "@/composable";
-import { getDocs, query, where, Timestamp } from "@firebase/firestore";
+import {
+  IoOrder,
+  orderFireConverter,
+  OrderItemCombined,
+  ORDER_STATE,
+  PayAmount,
+  useCalenderSearch,
+} from "@/composable";
+import { getDocs, query, where } from "@firebase/firestore";
 import {
   NSpace,
   NDivider,
   NDatePicker,
-  useMessage,
   DataTableColumns,
   NTag,
   NButton,
@@ -15,58 +21,29 @@ import {
   NDataTable,
   NSelect,
   NText,
+  NPopover,
 } from "naive-ui";
-import { ref, watch, h, shallowRef } from "vue";
-import { subDays, format, parseISO } from "date-fns";
+import { ref, watch, h, shallowRef, defineAsyncComponent } from "vue";
 
-const message = useMessage();
 const stateOpt = Object.entries(ORDER_STATE).map(([en, ko]) => ({
   label: ko,
   value: en,
 }));
-const today = Date.now();
-const startDate = subDays(today, 1);
-const valueFormat = "yyyy-MM-dd";
-
-const searchOpt = ref({
-  createdRange: [startDate.valueOf(), today] as [number, number],
-  states: [] as ORDER_STATE[],
-});
-function onChange(v: number) {
-  message.info("onChange " + v);
-}
-function onClear() {
-  message.info("onClear ");
-}
-function onConfirm(value: number | number[] | null) {
-  message.info("onConfirm");
-  console.log("Confirm-5 " + value);
-  if (!Array.isArray(value)) return;
-}
-function onBlur() {
-  message.warning("Blur-3");
-}
-const millisToDate = (d: number) => Timestamp.fromMillis(d).toDate();
+const states = ref<ORDER_STATE[]>([]);
+const {
+  message,
+  valueFormat,
+  createdRange,
+  onChange,
+  onClear,
+  onConfirm,
+  onBlur,
+  getConstraints,
+} = useCalenderSearch();
 async function onSearch() {
-  const opt = searchOpt.value;
-  console.log("onsearch", opt, opt.createdRange.map(millisToDate));
-  const constraints = [];
-  constraints.push(
-    where(
-      "createdAt.seconds",
-      ">=",
-      Timestamp.fromMillis(opt.createdRange[0]).seconds
-    )
-  );
-  constraints.push(
-    where(
-      "createdAt.seconds",
-      "<=",
-      Timestamp.fromMillis(opt.createdRange[1]).seconds
-    )
-  );
-  if (opt.states.length > 0) {
-    constraints.push(where("states", "array-contains-any", opt.states));
+  const constraints = getConstraints();
+  if (states.value.length > 0) {
+    constraints.push(where("states", "array-contains-any", states));
   }
   console.log("constraints: ", constraints);
   const orderQ = query(
@@ -80,24 +57,49 @@ async function onSearch() {
   orders.value = snap.docs.map((x) => x.data()).filter((x) => x);
   console.log("result: ", orders.value);
 }
-async function onSearchAll() {
-  const snap = await getDocs(
-    getIoCollectionGroup(ioFireStore, "ORDER_PROD").withConverter(
-      orderFireConverter
-    )
-  );
-  // dataFromSnap<IoOrder>(snap)
-  orders.value = snap.docs.map((x) => x.data()).filter((x) => x);
-}
 watch(
-  () => searchOpt.value,
+  () => states.value,
   (val) => {
-    if (val.states.length > 3) {
-      val.states = val.states.slice(0, 3);
+    if (val.length > 3) {
+      val = val.slice(0, 3);
     }
   }
 );
+
 const orders = shallowRef<IoOrder[]>([]);
+
+const PayAmountCard = defineAsyncComponent(
+  () => import("@/component/card/PayAmountCard.vue")
+);
+const OrderItemsTable = defineAsyncComponent(
+  () => import("@/component/table/OrderItemsTable.vue")
+);
+
+const renderPopover = <T, K extends keyof T>(
+  btnTxtField: K,
+  render: (d: T) => ReturnType<typeof h>,
+  data?: T
+) =>
+  data
+    ? h(
+        NPopover,
+        { trigger: "hover" },
+        {
+          trigger: () =>
+            h(
+              NButton,
+              {},
+              {
+                default: () => data[btnTxtField],
+              }
+            ),
+          default: () => render(data),
+        }
+      )
+    : "-";
+const renderAmount = (amount?: PayAmount) =>
+  renderPopover("amount", (d) => h(PayAmountCard, { amount: d }), amount);
+
 const orderColumns: DataTableColumns<IoOrder> = [
   {
     type: "selection",
@@ -106,16 +108,9 @@ const orderColumns: DataTableColumns<IoOrder> = [
     type: "expand",
     // expandable: (rowData) => rowData.name !== "Jim Green",
     renderExpand: (rowData) => {
-      return h(
-        NSpace,
-        {},
-        {
-          default: [
-            JSON.stringify(rowData.amount),
-            JSON.stringify(rowData.items),
-          ],
-        }
-      );
+      return h(OrderItemsTable, {
+        items: rowData.items as OrderItemCombined[],
+      });
     },
   },
   {
@@ -144,7 +139,44 @@ const orderColumns: DataTableColumns<IoOrder> = [
   {
     title: "생성일",
     key: "createdAt",
-    render: (row) => formatDate(loadDate(row.createdAt), "MIN"),
+    render: (row) =>
+      h(
+        NPopover,
+        { trigger: "hover" },
+        {
+          trigger: () =>
+            h(
+              NButton,
+              {},
+              {
+                default: () => formatDate(loadDate(row.createdAt), "MIN"),
+              }
+            ),
+          default: () =>
+            h(
+              NSpace,
+              { vertical: true },
+              {
+                default: () => [`shop id: ${row.shopId}`],
+              }
+            ),
+        }
+      ),
+  },
+  {
+    title: "상품지불",
+    key: "prodAmount",
+    render: (row) => renderAmount(row.prodAmount),
+  },
+  {
+    title: "픽업지불",
+    key: "pickAmount",
+    render: (row) => renderAmount(row.pickAmount),
+  },
+  {
+    title: "배송지불",
+    key: "shipAmount",
+    render: (row) => renderAmount(row.shipAmount),
   },
   {
     title: "Action",
@@ -161,13 +193,13 @@ const orderColumns: DataTableColumns<IoOrder> = [
     },
   },
 ];
-const orderRowKey = () => "dbId";
+const orderRowKey = (row: IoOrder) => row.dbId;
 </script>
 <template>
   <n-card title="주문 목록 페이지." style="width: 80vw">
     <n-space vertical>
       <n-date-picker
-        v-model:value="searchOpt.createdRange"
+        v-model:value="createdRange"
         :value-format="valueFormat"
         type="datetimerange"
         clearable
@@ -179,17 +211,16 @@ const orderRowKey = () => "dbId";
       <n-select
         clearable
         placeholder="주문상태 선택"
-        v-model:value="searchOpt.states"
+        v-model:value="states"
         multiple
         :options="stateOpt"
       />
       <n-space justify="end">
         행 개수: <n-text type="info"> {{ orders.length }} </n-text>
         <n-button @click="onSearch"> 검색 </n-button>
-        <n-button @click="onSearchAll"> 전체 검색 </n-button>
       </n-space>
       <n-divider />
-
+      <!-- Async expand tree data 로 비동기 로드가 가능하다. -->
       <n-data-table
         :row-key="orderRowKey"
         :columns="orderColumns"

@@ -1,29 +1,10 @@
 import { PAID_INFO } from "@/composable/common";
-import { ioFireStore } from "@/plugin/firebase";
-import { getIoCollection, insertById, uniqueArr } from "@io-boxies/js-lib";
-import { orderFireConverter, refreshOrder } from ".";
+import { uniqueArr } from "@io-boxies/js-lib";
+import cloneDeep from "lodash.clonedeep";
+import { getAmount, getPureAmount, refreshOrder } from ".";
 import { IoOrder, OrderItem, OrderItemCombined, ORDER_STATE } from "../domain";
-import {
-  getPendingCnt,
-  getActiveCnt,
-  getPureAmount,
-  getOrderAmount,
-  getOrderItems,
-} from "./getter";
+import { getPendingCnt, getActiveCnt, getOrderItems } from "./getter";
 import { isValidOrderItem, isValidOrder } from "./validate";
-
-export function updateOrder(order: IoOrder, shopId: string) {
-  return insertById<IoOrder>(
-    order,
-    getIoCollection(ioFireStore, {
-      c: "ORDER_PROD",
-      uid: shopId,
-    }),
-    order.dbId,
-    true,
-    orderFireConverter
-  );
-}
 
 export function setOrderCnt(d: {
   order: IoOrder;
@@ -65,9 +46,9 @@ export function setItemCnt(
   item.activeCnt = getActiveCnt(orderCnt, item.pendingCnt);
   // 4. set prod order amount
   const pureAmount = getPureAmount(orderCnt, item.vendorProd.vendorPrice);
-  item.amount.paid = paid;
-  item.amount.pureAmount = pureAmount;
-  item.amount.orderAmount = getOrderAmount(item.amount);
+  item.prodAmount.paid = paid;
+  item.prodAmount.pureAmount = pureAmount;
+  item.prodAmount.amount = getAmount(item.prodAmount);
   try {
     isValidOrderItem(item);
   } catch (e) {
@@ -86,4 +67,19 @@ export function setState(order: IoOrder, itemId: string, state: ORDER_STATE) {
   } else {
     throw new Error(`order item id ${itemId} not exist`);
   }
+}
+
+export function deleteItem(d: { order: IoOrder; itemId: string }) {
+  const idx = d.order.items.findIndex((x) => x.id === d.itemId);
+  if (idx === -1)
+    throw new Error(`order(${d.order.dbId}) not has item(${d.itemId})`);
+  const deletedItem = cloneDeep(d.order.items[idx]);
+  d.order.items.splice(idx, 1);
+  return deletedItem;
+  // if (d.order.items.length > 0) {
+  //   refreshOrder(d.order);
+  //   await ORDER_GARMENT_DB.updateOrder(d.order);
+  // } else {
+  //   await ORDER_GARMENT_DB.deleteOrder(d.order);
+  // }
 }

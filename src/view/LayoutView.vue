@@ -58,7 +58,7 @@ const menuOptions: MenuOption[] = [
     key: "shipment",
     children: [
       {
-        label: () => renderRoute("주문 목록", "ShipmentList"),
+        label: () => renderRoute("배송 목록", "ShipmentList"),
         key: "ShipmentList",
       },
     ],

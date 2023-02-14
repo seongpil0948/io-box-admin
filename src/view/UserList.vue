@@ -62,7 +62,7 @@ watch(
     for (let i = 0; i < us.length; i++) {
       const user = us[i];
       const uid = user.userInfo.userId;
-      const pay = (await IO_PAY_DB.getIoPayByUser(uid)) ?? IoPay.initial(uid);
+      const pay = await IO_PAY_DB.getIoPayByUser(uid);
       d.push(Object.assign({}, user, pay));
     }
     tableData.value = d;

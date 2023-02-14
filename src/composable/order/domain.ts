@@ -1,24 +1,29 @@
-import { IoShipment } from "@/composable";
+import { IoShipment, DefrayParam } from "@/composable";
 import { CommonField } from "@io-boxies/js-lib";
-import { PROD_TYPE } from "@/composable/product";
+import { QueryConstraint } from "@firebase/firestore";
+import { Ref } from "vue";
+import {
+  ShopUserGarment,
+  VendorUserGarment,
+  PROD_TYPE,
+  VendorGarmentCrt,
+  ShopGarmentCrt,
+} from "@/composable/product";
 import { PAY_METHOD } from "@/composable/payment";
 import { PAID_INFO } from "@/composable/common/domain";
-import { ShopGarmentCrt, ShopUserGarment } from "../product/shop-garment";
-import { VendorGarmentCrt, VendorUserGarment } from "../product/vendor-garment";
 
-export interface OrderAmount {
-  shipFeeAmount: number;
-  shipFeeDiscountAmount: number;
-  pickFeeAmount: number;
-  pickFeeDiscountAmount: number;
-  tax: number; // 주문건 생성시부과하여 지불되야할 금액 orderAmount 에 더해진다
+export interface PayAmount {
+  tax: number; // 주문건 생성시부과하여 지불되야할 금액 amount 에 더해진다
   paidAmount: number; // 지불된 금액
   paid: PAID_INFO; // 지불여부
   pureAmount: number; // 순수 상품 금액 (로그용)
-  orderAmount: number; // 주문 요청 금액
+  amount: number; // 주문 요청 금액
   paymentConfirm: boolean;
   paymentMethod?: PAY_METHOD;
   paidAt?: Date;
+  discountAmount: number;
+  pendingAmount: number;
+  isPending: boolean; // 보류 금액으로 채워진 상태인지.
 }
 
 export interface IoOrder extends CommonField {
@@ -31,6 +36,7 @@ export interface IoOrder extends CommonField {
   DoneAt?: Date;
 
   isDone?: boolean;
+  isDirectToShip: boolean; // direct to uncle
   dbId: string;
   shopId: string;
 
@@ -48,9 +54,12 @@ export interface IoOrder extends CommonField {
   states: ORDER_STATE[];
   cancellations: OrderCancel[];
   prodTypes: PROD_TYPE[];
-  paids: PAID_INFO[];
+  paids: PAID_INFO[]; // product paid
   orderTypes: ORDER_TYPE[];
-  amount: OrderAmount; // 결제완료(completePay)이후 건들면 안댐
+  // 결제완료(completePay)이후 건들면 안댐
+  prodAmount: PayAmount;
+  shipAmount: PayAmount;
+  pickAmount: PayAmount;
 }
 
 export interface OrderItem {
@@ -69,7 +78,7 @@ export interface OrderItem {
   orderDbId?: string;
   orderType: ORDER_TYPE;
   prodType: PROD_TYPE;
-  amount: OrderAmount;
+  prodAmount: PayAmount;
   cancellation?: OrderCancel;
   shipManagerId?: string; // 엉클 매니저 아이디
 }
@@ -233,4 +242,86 @@ export interface OrderExchange extends Claim {
 }
 export interface OrderCancel extends Claim {
   canceledDate?: Date; // 취소 완료일
+}
+
+export interface OrderDB<T> {
+  updateOrder(order: IoOrder): Promise<void>;
+  deleteOrder(order: IoOrder): Promise<void>;
+  orderGarment(
+    orderDbIds: string[],
+    orderItemIds: string[],
+    shopId: string
+  ): Promise<T[]>;
+  batchCreate(uid: string, orders: T[]): Promise<void>;
+  batchUpdate(arg: {
+    orderDbIdByShops: { [shopId: string]: string[] };
+    orderState?: ORDER_STATE;
+  }): Promise<void>;
+  batchDelete(ords: T[]): Promise<void>;
+  batchRead(
+    orderDbIds: string[],
+    constraints?: QueryConstraint[]
+  ): Promise<T[]>;
+  readById(shopId: string, orderDbId: string): Promise<T | undefined>;
+  shopReadListen(p: {
+    inStates?: ORDER_STATE[];
+    shopId: string;
+    orders: Ref<T[]>;
+  }): {
+    unsubscribe: () => void;
+  };
+  vendorReadListen(p: {
+    inStates?: ORDER_STATE[];
+    vendorId: string;
+    orders: Ref<T[]>;
+  }): {
+    unsubscribe: () => void;
+  };
+  uncleReadListen(p: {
+    inStates?: ORDER_STATE[];
+    uncleId: string;
+    orders: Ref<T[]>;
+  }): {
+    unsubscribe: () => void;
+  };
+  getExistOrderIds(shopId: string): Promise<Set<string>>;
+  orderApprove(
+    vendorId: string,
+    orderDbIds: string[],
+    orderItemIds: string[]
+  ): Promise<void>;
+  orderReject(orderDbIds: string[], orderItemIds: string[]): Promise<void>;
+  completePay(
+    orderDbIds: string[],
+    orderItemIds: string[],
+    shopId: string,
+    vendorId: string,
+    param: { [itemId: string]: DefrayParam }
+  ): Promise<void>;
+  orderToReady(orderDbIds: string[], orderItemIds: string[]): Promise<void>;
+  reqPickup(
+    orderDbIds: string[],
+    orderItemIds: string[],
+    uncleId: string,
+    shopId: string,
+    isDirect: boolean
+  ): Promise<IoOrder>;
+  returnReq(orderDbIds: string[], orderItemIds: string[]): Promise<void>;
+  returnApprove(orderDbIds: string[], orderItemIds: string[]): Promise<void>;
+  returnReject(orderDbIds: string[], orderItemIds: string[]): Promise<void>;
+  returnDone(orderDbIds: string[], orderItemIds: string[]): Promise<void>;
+  cancelReq(
+    shopId: string,
+    orderDbId: string,
+    orderItemId: string,
+    claim: OrderCancel,
+    cancelCnt: number
+  ): Promise<void>;
+  cancelApprove(orderDbIds: string[], orderItemIds: string[]): Promise<void>;
+  cancelReject(orderDbIds: string[], orderItemIds: string[]): Promise<void>;
+  orderDone(orderDbIds: string[], orderItemIds: string[]): Promise<void>;
+}
+
+export interface ShipDB<T> {
+  approvePickUp(row: IoOrder, expectedReduceCoin: number): Promise<T | Error>;
 }

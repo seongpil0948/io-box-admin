@@ -4,7 +4,7 @@ import {
   GENDER,
   PART,
   VendorProdCrt,
-  OrderAmount,
+  PayAmount,
   OrderItem,
 } from "@/composable";
 import { IoUser } from "@io-boxies/js-lib";
@@ -37,7 +37,7 @@ export interface VendorUserGarmentCombined
 export interface VendorOrderGarment extends VendorGarmentCrt, IoOrder {}
 export interface VendorUserOrderGarment
   extends VendorUserGarment,
-    Partial<OrderAmount>,
+    Partial<PayAmount>,
     Omit<Partial<OrderItem>, "prodType" | "vendorId"> {
   shopUser?: IoUser;
 }
