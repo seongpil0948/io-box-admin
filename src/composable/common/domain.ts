@@ -1,21 +1,17 @@
-export type BOOL_M = "T" | "F" | "M";
-export const BOOL_M: { [key in BOOL_M]: BOOL_M } = Object.freeze({
-  T: "T",
-  F: "F",
-  M: "M",
+export type PAID_INFO = "OVERCOME" | "CREDIT" | "EXACT" | "NO";
+export const PAID_INFO: { [key in PAID_INFO]: PAID_INFO } = Object.freeze({
+  OVERCOME: "OVERCOME",
+  CREDIT: "CREDIT",
+  EXACT: "EXACT",
+  NO: "NO",
 });
 
-export type SHIP_STATE =
-  | "BEFORE_READY"
-  | "BEFORE_SHIP"
-  | "ON_GOING"
-  | "DONE"
-  | "PENDING";
+export type TryStr = string | undefined | null;
+export type TryNum = number | undefined | null;
 
-export const SHIP_STATE: { [key in SHIP_STATE]: SHIP_STATE } = Object.freeze({
-  BEFORE_READY: "BEFORE_READY",
-  BEFORE_SHIP: "BEFORE_SHIP",
-  ON_GOING: "ON_GOING",
-  DONE: "DONE",
-  PENDING: "PENDING",
+export type VISIBILITY = "NO" | "ME" | "GLOBAL";
+export const VISIBILITY: { [key in VISIBILITY]: VISIBILITY } = Object.freeze({
+  NO: "NO",
+  ME: "ME",
+  GLOBAL: "GLOBAL",
 });

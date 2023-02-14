@@ -30,6 +30,36 @@ const routes: Array<RouteRecordRaw> = [
         component: () =>
           import(/* webpackChunkName: "cs" */ "@/view/CsPostList.vue"),
       },
+      {
+        path: "/pickupLocateManage",
+        name: "PickupLocateManage",
+        component: () =>
+          import(
+            /* webpackChunkName: "common" */ "@/view/PickLocateManage.vue"
+          ),
+      },
+      {
+        path: "/order/list",
+        name: "OrderList",
+        component: () =>
+          import(/* webpackChunkName: "order" */ "@/view/order/OrderList.vue"),
+      },
+      {
+        path: "/ship/list",
+        name: "ShipmentList",
+        component: () =>
+          import(
+            /* webpackChunkName: "order" */ "@/view/ship/ShipmentList.vue"
+          ),
+      },
+      {
+        path: "/order/confirmPayment",
+        name: "OrderConfirmPayment",
+        component: () =>
+          import(
+            /* webpackChunkName: "order" */ "@/view/order/OrderConfirmPayment.vue"
+          ),
+      },
     ],
   },
 

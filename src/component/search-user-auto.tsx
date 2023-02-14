@@ -49,7 +49,7 @@ export default defineComponent({
     },
   },
   setup(props, { emit }) {
-    console.log("login view props env in vue-lib:", props.env);
+    console.log("SearchUserAuto props env in vue-lib:", props.env);
     const options = ref<AutoCompleteOption[]>([]);
     const makeOption = (name: string, userId: string): AutoCompleteOption => ({
       label: name,

@@ -43,13 +43,14 @@ function onInternalError(err: any) {
     console.log(`code: ${err.code}, message: ${err.message}`, err);
   }
 }
+const env = process.env.NODE_ENV === "production" ? "io-prod" : "io-dev";
 </script>
 
 <template>
   <NSpace vertical justify="center" align="center" class="page-container">
     <LoginView
       :store="ioFireStore"
-      env="io-prod"
+      :env="env"
       :custom-token-url="`${API_URL}/auth/customToken`"
       kakao-img-other-path="icon-kakao-talk-black.png"
       kakao-img-path="/icon-kakao-talk.png"

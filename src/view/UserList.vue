@@ -62,7 +62,7 @@ watch(
     for (let i = 0; i < us.length; i++) {
       const user = us[i];
       const uid = user.userInfo.userId;
-      const pay = (await IO_PAY_DB.getIoPayByUser(uid)) ?? IoPay.initial(uid);
+      const pay = await IO_PAY_DB.getIoPayByUser(uid);
       d.push(Object.assign({}, user, pay));
     }
     tableData.value = d;
@@ -415,6 +415,7 @@ async function loadResults() {
     results.value.map((x) => x.id)
   );
 }
+const env = process.env.NODE_ENV === "production" ? "io-prod" : "io-dev";
 </script>
 <template>
   <n-card>
@@ -426,7 +427,7 @@ async function loadResults() {
           @on-result="onResult"
           :search-size="resultSize"
           :show-role-selector="false"
-          env="io-prod"
+          :env="env"
         />
         <n-button @click="loadResults">검색</n-button>
       </n-space>
