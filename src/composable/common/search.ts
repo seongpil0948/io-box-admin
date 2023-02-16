@@ -83,10 +83,10 @@ export function useCalenderSearch() {
   }
 
   const millisToDate = (d: number) => Timestamp.fromMillis(d).toDate();
-  function getConstraints() {
+  function getConstraints(field = "createdAt") {
     const constraints: QueryFieldFilterConstraint[] = [];
     constraints.push(
-      where("createdAt", ">=", Timestamp.fromMillis(createdRange.value[0]))
+      where(field, ">=", Timestamp.fromMillis(createdRange.value[0]))
       // where(
       //   "createdAt.seconds",
       //   ">=",
@@ -94,7 +94,7 @@ export function useCalenderSearch() {
       // )
     );
     constraints.push(
-      where("createdAt", "<=", Timestamp.fromMillis(createdRange.value[1]))
+      where(field, "<=", Timestamp.fromMillis(createdRange.value[1]))
     );
     return constraints;
   }

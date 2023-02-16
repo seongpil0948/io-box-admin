@@ -41,9 +41,9 @@ const {
   getConstraints,
 } = useCalenderSearch();
 async function onSearch() {
-  const constraints = getConstraints();
+  const constraints = getConstraints("od.createdAt");
   if (states.value.length > 0) {
-    constraints.push(where("states", "array-contains-any", states));
+    constraints.unshift(where("states", "array-contains-any", states.value));
   }
   console.log("constraints: ", constraints);
   const orderQ = query(
@@ -149,7 +149,7 @@ const orderColumns: DataTableColumns<IoOrder> = [
               NButton,
               {},
               {
-                default: () => formatDate(loadDate(row.createdAt), "MIN"),
+                default: () => formatDate(loadDate(row.od.createdAt), "MIN"),
               }
             ),
           default: () =>

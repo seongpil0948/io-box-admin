@@ -11,7 +11,6 @@ import {
 } from "@/composable/product";
 import { PAY_METHOD } from "@/composable/payment";
 import { PAID_INFO } from "@/composable/common/domain";
-
 export interface PayAmount {
   tax: number; // 주문건 생성시부과하여 지불되야할 금액 amount 에 더해진다
   paidAmount: number; // 지불된 금액
@@ -25,16 +24,12 @@ export interface PayAmount {
   pendingAmount: number;
   isPending: boolean; // 보류 금액으로 채워진 상태인지.
 }
-
-export interface IoOrder extends CommonField {
+export type OrderDateMap = {
+  [key in ORDER_STATE]?: Date;
+} & { createdAt?: Date; updatedAt?: Date; tossAt?: Date };
+export interface IoOrder {
   // only used OrderItem Aggregation
-  createdAt?: Date;
-  updatedAt?: Date;
-  approvedAt?: Date;
-  paidAt?: Date;
-  tossAt?: Date;
-  DoneAt?: Date;
-
+  od: OrderDateMap;
   isDone?: boolean;
   isDirectToShip: boolean; // direct to uncle
   dbId: string;
@@ -63,6 +58,7 @@ export interface IoOrder extends CommonField {
 }
 
 export interface OrderItem {
+  od: OrderDateMap;
   id: string;
   orderIds: string[];
   vendorId: string;
@@ -245,7 +241,7 @@ export interface OrderCancel extends Claim {
 }
 
 export interface OrderDB<T> {
-  updateOrder(order: IoOrder): Promise<void>;
+  updateOrder(order: IoOrder, itemId?: string): Promise<void>;
   deleteOrder(order: IoOrder): Promise<void>;
   orderGarment(
     orderDbIds: string[],
@@ -323,5 +319,8 @@ export interface OrderDB<T> {
 }
 
 export interface ShipDB<T> {
-  approvePickUp(row: IoOrder, expectedReduceCoin: number): Promise<T | Error>;
+  getShipment(uncleId: string, shipId: string): Promise<IoShipment | null>;
+  batchUpdate(shipments: Partial<IoShipment>[]): Promise<void>;
+  approvePickUp(row: IoOrder): Promise<T | Error>;
+  doneShipOrder(order: IoOrder, itemId: string): Promise<void>;
 }
