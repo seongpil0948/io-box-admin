@@ -15,50 +15,37 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "/userList",
         name: "UserList",
-        component: () =>
-          import(/* webpackChunkName: "user" */ "@/view/UserList.vue"),
+        component: () => import("@/view/UserList.vue"),
       },
       {
         path: "/csWrite",
         name: "CsWrite",
-        component: () =>
-          import(/* webpackChunkName: "cs" */ "@/view/CsWrite.vue"),
+        component: () => import("@/view/CsWrite.vue"),
       },
       {
         path: "/csPostList",
         name: "CsPostList",
-        component: () =>
-          import(/* webpackChunkName: "cs" */ "@/view/CsPostList.vue"),
+        component: () => import("@/view/CsPostList.vue"),
       },
       {
         path: "/pickupLocateManage",
         name: "PickupLocateManage",
-        component: () =>
-          import(
-            /* webpackChunkName: "common" */ "@/view/PickLocateManage.vue"
-          ),
+        component: () => import("@/view/PickLocateManage.vue"),
       },
       {
         path: "/order/list",
         name: "OrderList",
-        component: () =>
-          import(/* webpackChunkName: "order" */ "@/view/order/OrderList.vue"),
+        component: () => import("@/view/order/OrderList.vue"),
       },
       {
         path: "/ship/list",
         name: "ShipmentList",
-        component: () =>
-          import(
-            /* webpackChunkName: "order" */ "@/view/ship/ShipmentList.vue"
-          ),
+        component: () => import("@/view/ship/ShipmentList.vue"),
       },
       {
         path: "/order/confirmPayment",
         name: "OrderConfirmPayment",
-        component: () =>
-          import(
-            /* webpackChunkName: "order" */ "@/view/order/OrderConfirmPayment.vue"
-          ),
+        component: () => import("@/view/order/OrderConfirmPayment.vue"),
       },
     ],
   },
@@ -66,13 +53,12 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/login",
     name: "Login",
-    component: () =>
-      import(/* webpackChunkName: "user" */ "@/view/LoginPage.vue"),
+    component: () => import("@/view/LoginPage.vue"),
   },
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 

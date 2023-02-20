@@ -26,7 +26,7 @@ const { saveEditor } = useEditor({
   readOnly: false,
   elementId: "io-editor",
   placeholder: "상품 정보 입력",
-  data: post && post.value?.content ? post.value.content : undefined,
+  data: post?.value && post.value?.content ? post.value.content : undefined,
 });
 const msg = useMessage();
 const router = useRouter();
@@ -88,18 +88,18 @@ async function onPostSubmit() {
     <n-input v-model:value="postModel.title" placeholder="제목" />
     <n-space item-style="min-width: 200px;">
       <n-select
-        placeholder="포스팅타입"
         v-model:value="postModel.postType"
+        placeholder="포스팅타입"
         :options="postTypeOpt"
       />
       <n-select
-        placeholder="허용유저타입"
         v-model:value="postModel.allowRole"
+        placeholder="허용유저타입"
         :options="roleOpt"
       />
       <n-select
-        placeholder="카테고리"
         v-model:value="postModel.category"
+        placeholder="카테고리"
         :options="ctgrOpt"
       />
     </n-space>

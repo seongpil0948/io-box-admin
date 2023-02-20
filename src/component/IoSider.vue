@@ -17,20 +17,20 @@ async function onLogout() {
 
 <template>
   <n-layout-sider
+    v-model:collapsed="collapsed"
     bordered
     show-trigger
     collapse-mode="width"
     :collapsed-width="100"
     :width="240"
     :native-scrollbar="false"
-    v-model:collapsed="collapsed"
     style="height: 100%"
   >
     <n-space justify="center" align="center">
       <logo-image
-        @click="$router.push('/')"
         size="3.5rem"
         style="padding-top: 0.5rem"
+        @click="$router.push('/')"
       />
 
       <n-h2

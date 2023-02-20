@@ -85,7 +85,7 @@ watchPostEffect(() => {
 </script>
 <template>
   <n-layout has-sider :style="`min-height: ${minHeight};`">
-    <io-sider :style="`min-height: ${minHeight}`" :menuOptions="menuOptions" />
+    <io-sider :style="`min-height: ${minHeight}`" :menu-options="menuOptions" />
     <n-spin size="large" :show="cs.showSpin">
       <div style="width: 100vw">
         <div style="width: 85vw; margin-left: 1vw">

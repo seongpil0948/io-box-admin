@@ -9,12 +9,12 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 export const ioFire = IoFireApp.getInst(
-  process.env.NODE_ENV === "production" ? "io-prod" : "io-dev"
+  import.meta.env.MODE === "production" ? "io-prod" : "io-dev"
 );
 
 export async function initIoFirebase() {
   const ioFire = IoFireApp.getInst(
-    process.env.NODE_ENV === "production" ? "io-prod" : "io-dev"
+    import.meta.env.MODE === "production" ? "io-prod" : "io-dev"
   );
   const auth = initializeAuth(ioFire.app);
   useDeviceLanguage(auth);

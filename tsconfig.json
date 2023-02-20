@@ -19,7 +19,8 @@
       "lib"
     ],
     "types": [
-      "webpack-env"
+      "vite/client",
+      "node"
     ],
     "paths": {
       "@/*": [

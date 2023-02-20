@@ -415,7 +415,7 @@ async function loadResults() {
     results.value.map((x) => x.id)
   );
 }
-const env = process.env.NODE_ENV === "production" ? "io-prod" : "io-dev";
+const env = import.meta.env.MODE === "production" ? "io-prod" : "io-dev";
 </script>
 <template>
   <n-card>
@@ -424,10 +424,10 @@ const env = process.env.NODE_ENV === "production" ? "io-prod" : "io-dev";
         <n-button @click="getAllUsers">전체 유저 불러오기</n-button>
         <SearchUserAuto
           :store="ioFireStore"
-          @on-result="onResult"
           :search-size="resultSize"
           :show-role-selector="false"
           :env="env"
+          @on-result="onResult"
         />
         <n-button @click="loadResults">검색</n-button>
       </n-space>
@@ -450,7 +450,7 @@ const env = process.env.NODE_ENV === "production" ? "io-prod" : "io-dev";
       }"
     />
   </n-card>
-  <n-modal :show="showEditModal" @update:show="updateModal" v-if="target">
+  <n-modal v-if="target" :show="showEditModal" @update:show="updateModal">
     <n-card style="width: 600px" title="유저정보수정" :bordered="false">
       <n-space justify="space-between">
         <n-text type="info"> 유저 ID </n-text>

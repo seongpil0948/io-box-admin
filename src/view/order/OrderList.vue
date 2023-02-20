@@ -209,9 +209,9 @@ const orderRowKey = (row: IoOrder) => row.dbId;
         @confirm="onConfirm"
       />
       <n-select
+        v-model:value="states"
         clearable
         placeholder="주문상태 선택"
-        v-model:value="states"
         multiple
         :options="stateOpt"
       />

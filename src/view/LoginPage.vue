@@ -43,7 +43,7 @@ function onInternalError(err: any) {
     console.log(`code: ${err.code}, message: ${err.message}`, err);
   }
 }
-const env = process.env.NODE_ENV === "production" ? "io-prod" : "io-dev";
+const env = import.meta.env.MODE === "production" ? "io-prod" : "io-dev";
 </script>
 
 <template>
@@ -52,8 +52,8 @@ const env = process.env.NODE_ENV === "production" ? "io-prod" : "io-dev";
       :store="ioFireStore"
       :env="env"
       :custom-token-url="`${API_URL}/auth/customToken`"
-      kakao-img-other-path="icon-kakao-talk-black.png"
-      kakao-img-path="/icon-kakao-talk.png"
+      kakao-img-other-path="/img/icon-kakao-talk-black.png"
+      kakao-img-path="/img/icon-kakao-talk.png"
       logo-img-path="/logo.png"
       @on-login="onLogin"
       @on-internal-error="onInternalError"
