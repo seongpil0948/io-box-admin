@@ -101,16 +101,13 @@ async function submitModal() {
     positiveText: "Sure",
     negativeText: "Not Sure",
     onPositiveClick: async () => {
-      pay.history.push({
-        userId: authStore.currUser.userInfo.userId,
-        amount: pay.budget - existPay.budget,
-        pendingAmount: pay.pendingBudget - existPay.pendingBudget,
-        state: "ADMIN_MODIFY",
-        tbd: {},
-      });
       return Promise.all([
         USER_DB.updateUser(ioFireStore, targetU),
-        pay.update(),
+        pay.updatePay(
+          "ADMIN_MODIFY",
+          pay.budget - existPay.budget,
+          pay.pendingBudget - existPay.pendingBudget
+        ),
       ])
         .then(() => {
           msg.info("성공");

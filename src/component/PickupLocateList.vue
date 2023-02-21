@@ -3,8 +3,7 @@ import { Locate, LocateCRT } from "@/composable";
 import { ref } from "vue";
 import { onSnapshot, setDoc, doc, deleteDoc } from "@firebase/firestore";
 import { useMessage } from "naive-ui";
-import { getIoCollection } from "@io-boxies/js-lib";
-import { ioFireStore } from "@/plugin/firebase";
+import { getIoCollection, ioFireStore } from "@/plugin/firebase";
 
 const locates = ref<Locate[]>([]);
 const msg = useMessage();
@@ -46,7 +45,7 @@ const locateKey = [
 
 <template>
   <n-space>
-    <n-tooltip trigger="hover" v-for="(i, idx) in locates" :key="idx">
+    <n-tooltip v-for="(i, idx) in locates" :key="idx" trigger="hover">
       <template #trigger>
         <n-tag round closable @close="onLocateClose(i as Locate)">
           {{ i.alias }}</n-tag
@@ -64,7 +63,7 @@ const locateKey = [
     <n-button size="small" @click="showAppendModal = true">추가 </n-button>
   </n-space>
   <locate-append-modal
-    @appendLocate="onAppendLocate"
     v-model:showAppendModal="showAppendModal"
+    @appendLocate="onAppendLocate"
   />
 </template>

@@ -1,4 +1,4 @@
-import { NIcon } from "naive-ui";
+import { NButton, NIcon, NPopover } from "naive-ui";
 import { type Component, h } from "vue";
 import { RouterLink } from "vue-router";
 
@@ -18,3 +18,26 @@ function renderRoute(label: string, key: string) {
 }
 
 export { renderIcon, renderRoute };
+
+export const renderPopover = <T>(
+  btnTxtField: string,
+  render: (d: T) => ReturnType<typeof h>,
+  data?: T
+) =>
+  data
+    ? h(
+        NPopover,
+        { trigger: "hover" },
+        {
+          trigger: () =>
+            h(
+              NButton,
+              {},
+              {
+                default: () => (data as any)[btnTxtField] ?? btnTxtField,
+              }
+            ),
+          default: () => render(data),
+        }
+      )
+    : "-";

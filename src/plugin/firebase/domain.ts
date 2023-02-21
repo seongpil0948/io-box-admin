@@ -14,6 +14,7 @@ export type IoCollection =
   | "CS_POST"
   | "TEST"
   | "VIRTUAL_VENDOR_PROD"
+  | "REQUEST_ENCASH"
   | "VIRTUAL_ORDER_PROD"
   | "VIRTUAL_USER";
 
@@ -36,6 +37,7 @@ export const IoCollection: { [key in IoCollection]: IoCollection } =
     VIRTUAL_VENDOR_PROD: "VIRTUAL_VENDOR_PROD",
     VIRTUAL_ORDER_PROD: "VIRTUAL_ORDER_PROD",
     VIRTUAL_USER: "VIRTUAL_USER",
+    REQUEST_ENCASH: "REQUEST_ENCASH",
   });
 
 export interface getCollectParam {

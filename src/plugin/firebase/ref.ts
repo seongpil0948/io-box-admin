@@ -73,13 +73,15 @@ export function getIoCollection(
       if (!p.uid) throw new RequiredField("getIoCollection", "uid");
       str = `user/${p.uid}/virtualUser`;
       break;
+    case IoCollection.REQUEST_ENCASH:
+      str = `requestEncash`;
+      break;
     default:
       throw Error(`IoCollection Enum Member ${p.c.toString()} is not Exist`);
   }
 
   return collection(store, str);
 }
-
 export function getIoCollectionGroup(store: Firestore, c: IoCollection) {
   let str: string;
   switch (c) {

@@ -13,9 +13,14 @@ const routes: Array<RouteRecordRaw> = [
         component: HomeView,
       },
       {
-        path: "/userList",
+        path: "user/list",
         name: "UserList",
-        component: () => import("@/view/UserList.vue"),
+        component: () => import("@/view/user/UserList.vue"),
+      },
+      {
+        path: "user/encashList",
+        name: "EncashReqList",
+        component: () => import("@/view/user/EncashReqList.vue"),
       },
       {
         path: "/csWrite",

@@ -24,6 +24,7 @@ import {
   NPopover,
 } from "naive-ui";
 import { ref, watch, h, shallowRef, defineAsyncComponent } from "vue";
+import { renderPopover } from "@/util";
 
 const stateOpt = Object.entries(ORDER_STATE).map(([en, ko]) => ({
   label: ko,
@@ -75,28 +76,6 @@ const OrderItemsTable = defineAsyncComponent(
   () => import("@/component/table/OrderItemsTable.vue")
 );
 
-const renderPopover = <T, K extends keyof T>(
-  btnTxtField: K,
-  render: (d: T) => ReturnType<typeof h>,
-  data?: T
-) =>
-  data
-    ? h(
-        NPopover,
-        { trigger: "hover" },
-        {
-          trigger: () =>
-            h(
-              NButton,
-              {},
-              {
-                default: () => data[btnTxtField],
-              }
-            ),
-          default: () => render(data),
-        }
-      )
-    : "-";
 const renderAmount = (amount?: PayAmount) =>
   renderPopover("amount", (d) => h(PayAmountCard, { amount: d }), amount);
 

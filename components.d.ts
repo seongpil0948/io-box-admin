@@ -13,6 +13,7 @@ declare module '@vue/runtime-core' {
     CsPostForm: typeof import('./src/component/cs/CsPostForm.vue')['default']
     CsPostList: typeof import('./src/view/CsPostList.vue')['default']
     CsWrite: typeof import('./src/view/CsWrite.vue')['default']
+    EncashReqList: typeof import('./src/view/user/EncashReqList.vue')['default']
     HomeView: typeof import('./src/view/HomeView.vue')['default']
     IoSider: typeof import('./src/component/IoSider.vue')['default']
     LayoutView: typeof import('./src/view/LayoutView.vue')['default']
@@ -26,6 +27,7 @@ declare module '@vue/runtime-core' {
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
     NDataTable: typeof import('naive-ui')['NDataTable']
+    NDatePicker: typeof import('naive-ui')['NDatePicker']
     NDialogProvider: typeof import('naive-ui')['NDialogProvider']
     NDivider: typeof import('naive-ui')['NDivider']
     NForm: typeof import('naive-ui')['NForm']
@@ -47,6 +49,8 @@ declare module '@vue/runtime-core' {
     NSpace: typeof import('naive-ui')['NSpace']
     NSpin: typeof import('naive-ui')['NSpin']
     NTable: typeof import('naive-ui')['NTable']
+    NTabPane: typeof import('naive-ui')['NTabPane']
+    NTabs: typeof import('naive-ui')['NTabs']
     NTag: typeof import('naive-ui')['NTag']
     NText: typeof import('naive-ui')['NText']
     NTooltip: typeof import('naive-ui')['NTooltip']
@@ -60,6 +64,7 @@ declare module '@vue/runtime-core' {
     RouterView: typeof import('vue-router')['RouterView']
     SearchUserAuto: typeof import('./src/component/search-user-auto.tsx')['default']
     ShipmentList: typeof import('./src/view/ship/ShipmentList.vue')['default']
-    UserList: typeof import('./src/view/UserList.vue')['default']
+    UserList: typeof import('./src/view/user/UserList.vue')['default']
+    UserSummaryCard: typeof import('./src/component/card/UserSummaryCard.vue')['default']
   }
 }
