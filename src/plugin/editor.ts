@@ -13,6 +13,17 @@ import Table from "@editorjs/table";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Embed from "@editorjs/embed";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import ImageTool from "@editorjs/image";
+import {
+  getDownloadURL,
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+} from "firebase/storage";
+import { IoFireApp } from "@io-boxies/js-lib";
+import { uuidv4 } from "@firebase/util";
 export interface IoEditorParam {
   readOnly: boolean;
   elementId: string;
@@ -61,7 +72,6 @@ export function getEditor(c: IoEditorParam) {
     holder: c.elementId,
     placeholder: c.placeholder,
     onChange: c.onChange,
-    // inlineToolbar: ["bold", "italic", "underline"],
     tools: {
       list: List,
       table: Table,
@@ -69,12 +79,47 @@ export function getEditor(c: IoEditorParam) {
       embed: {
         class: Embed,
         inlineToolbar: true,
-        // config: {
-        //   services: {
-        //     youtube: true,
-        //     coub: true,
-        //   },
-        // },
+      },
+      image: {
+        class: ImageTool,
+        config: {
+          field: "spField",
+          additionalRequestData: {
+            reqSpData: "hihi",
+          },
+          additionalRequestHeaders: {
+            authorization: "Bearer eyJhbGciJ9...TJVA95OrM7h7HgQ",
+          },
+          captionPlaceholder: "이미지 설명글을 입력해주세요.",
+          buttonContent: "Image Upload",
+          uploader: {
+            async uploadByFile(
+              file: File
+            ): Promise<{ success: number; file: { url: string } }> {
+              console.log("uploadFile: ", file);
+              const storage = getStorage(IoFireApp.getInst().app);
+              const noticeRef = storageRef(
+                storage,
+                `cs/notice/${uuidv4()}_${file.name}`
+              );
+              return uploadBytes(noticeRef, file).then((snapshot) => {
+                return getDownloadURL(snapshot.ref).then((downloadURL) => {
+                  return {
+                    success: 1,
+                    file: {
+                      url: downloadURL,
+                      // any other image data you want to store, such as width, height, color, extension, etc
+                    },
+                  };
+                });
+              });
+            },
+            // endpoints: {
+            //   byFile: "http://localhost:8008/uploadFile", // Your backend file uploader endpoint
+            //   byUrl: "http://localhost:8008/fetchUrl", // Your endpoint that provides uploading by Url
+            // },
+          },
+        },
       },
     },
   });
