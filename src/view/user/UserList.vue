@@ -14,6 +14,7 @@ import {
 import {
   doc,
   getDocs,
+  orderBy,
   query,
   QueryConstraint,
   runTransaction,
@@ -123,9 +124,15 @@ async function submitModal() {
 const c = getIoCollection(ioFireStore, { c: IoCollection.USER }).withConverter(
   userFireConverter
 );
-async function getAllUsers() {
+async function getNoPass() {
   users.value = [];
-  const snap = await getDocs(c);
+  const snap = await getDocs(
+    query(
+      c,
+      where("userInfo.passed", "!=", true),
+      orderBy("userInfo.createdAt", "desc")
+    )
+  );
   snap.docs.forEach((d) => {
     const data = d.data();
     if (data) {
@@ -418,7 +425,7 @@ const env = import.meta.env.MODE === "production" ? "io-prod" : "io-dev";
   <n-card>
     <template #header>
       <n-space>
-        <n-button @click="getAllUsers">전체 유저 불러오기</n-button>
+        <n-button @click="getNoPass">미승인유저 불러오기</n-button>
         <SearchUserAuto
           :store="ioFireStore"
           :search-size="resultSize"

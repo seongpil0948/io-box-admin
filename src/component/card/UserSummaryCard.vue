@@ -16,19 +16,18 @@ const props = defineProps<{ user: IoUser }>();
 const { user } = toRefs(props);
 const pay = shallowRef<IoPay | null>(null);
 const payHistory = shallowRef<PayHistoryCRT[]>([]);
+
+const getC = (uid: string) =>
+  getIoCollection(ioFireStore, {
+    c: "PAY_HISTORY",
+    uid,
+  }).withConverter(fireConverter<PayHistoryCRT>());
 watch(
   () => user.value,
   async (u) => {
     pay.value = await IO_PAY_DB.getIoPayByUser(u.userInfo.userId);
     const docsRef = await getDocs(
-      query(
-        getIoCollection(ioFireStore, {
-          c: "PAY_HISTORY",
-          uid: u.userInfo.userId,
-        }).withConverter(fireConverter<PayHistoryCRT>()),
-        orderBy("createdAt", "desc"),
-        limit(50)
-      )
+      query(getC(u.userInfo.userId), orderBy("createdAt", "desc"), limit(50))
     );
     const history: typeof payHistory.value = [];
     docsRef.docs.forEach((d) => {

@@ -4,11 +4,7 @@ import { ref, Ref, computed } from "vue";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { useMessage } from "naive-ui";
 import { subDays } from "date-fns";
-import {
-  QueryFieldFilterConstraint,
-  Timestamp,
-  where,
-} from "firebase/firestore";
+import { orderBy, QueryConstraint, Timestamp, where } from "firebase/firestore";
 
 export function useElasticSearch(d: {
   onSearch: (result: any) => void;
@@ -84,7 +80,7 @@ export function useCalenderSearch() {
 
   const millisToDate = (d: number) => Timestamp.fromMillis(d).toDate();
   function getConstraints(field = "createdAt") {
-    const constraints: QueryFieldFilterConstraint[] = [];
+    const constraints: QueryConstraint[] = [];
     constraints.push(
       where(field, ">=", Timestamp.fromMillis(createdRange.value[0]))
       // where(
@@ -96,6 +92,7 @@ export function useCalenderSearch() {
     constraints.push(
       where(field, "<=", Timestamp.fromMillis(createdRange.value[1]))
     );
+    constraints.push(orderBy(field, "desc"));
     return constraints;
   }
   return {

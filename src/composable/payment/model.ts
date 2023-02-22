@@ -55,19 +55,24 @@ export class IoPay extends CommonField implements IoPayCRT {
   }
   async updatePay(
     histState: PAY_HIST_STATE,
-    newBudget: number,
-    newPendingBudget: number
+    amount: number,
+    pendingAmount: number
   ) {
-    this.budget += newBudget;
-    this.pendingBudget += newPendingBudget;
+    this.budget += amount;
+    this.pendingBudget += pendingAmount;
     const hist = newPayHistory({
       userId: this.userId,
-      amount: newBudget,
-      pendingAmount: newPendingBudget,
+      amount: amount,
+      pendingAmount: pendingAmount,
       state: histState,
     });
     return Promise.all([
-      setDoc(doc(getIoCollection(ioFireStore, { c: "PAY_HISTORY" })), hist),
+      setDoc(
+        doc(
+          getIoCollection(ioFireStore, { c: "PAY_HISTORY", uid: this.userId })
+        ),
+        hist
+      ),
       this.update(),
     ]);
   }
