@@ -8,6 +8,7 @@ import {
 } from "@io-boxies/js-lib";
 import {
   downloadOrders,
+  getUserName,
   IoOrder,
   IoUser,
   orderFireConverter,
@@ -16,6 +17,7 @@ import {
   PayAmount,
   useCalenderSearch,
   userFireConverter,
+  USER_DB,
 } from "@/composable";
 import {
   DocumentData,
@@ -39,9 +41,7 @@ import {
 } from "naive-ui";
 import { ref, watch, h, shallowRef, defineAsyncComponent } from "vue";
 import { dataFromSnap, renderPopover } from "@/util";
-import { useAuthStore } from "@/store";
 
-const authStore = useAuthStore();
 const stateOpt = Object.entries(ORDER_STATE).map(([en, ko]) => ({
   label: ko,
   value: en,
@@ -57,6 +57,8 @@ const {
   onBlur,
   getConstraints,
 } = useCalenderSearch();
+
+const uById = ref<{ [uid: string]: IoUser }>({});
 async function onSearch() {
   const constraints = getConstraints("od.createdAt");
   if (states.value.length > 0) {
@@ -73,6 +75,14 @@ async function onSearch() {
   // dataFromSnap<IoOrder>(snap)
   orders.value = snap.docs.map((x) => x.data()).filter((x) => x);
   console.log("result: ", orders.value);
+  const uids = uniqueArr(orders.value.map((x) => x.shopId));
+  const us = await USER_DB.getUserByIds(
+    ioFireStore,
+    uids.filter((uid) => !uById.value[uid])
+  );
+  us.forEach((u) => {
+    uById.value[u.userInfo.userId] = u;
+  });
 }
 watch(
   () => states.value,
@@ -105,6 +115,15 @@ const orderColumns: DataTableColumns<IoOrder> = [
       return h(OrderItemsTable, {
         items: rowData.items as OrderItemCombined[],
       });
+    },
+  },
+  {
+    title: "유저이름",
+    key: "uname",
+    render(row) {
+      return uById.value[row.shopId]
+        ? getUserName(uById.value[row.shopId])
+        : "-";
     },
   },
   {
@@ -202,8 +221,7 @@ async function downOrders() {
     "userInfo.userId"
   );
   const virVendors = virUserSnap.flatMap(dataFromSnap<IoUser>);
-  const u = authStore.currUser;
-  return downloadOrders(u, data, virVendors);
+  return downloadOrders(uById.value, data, virVendors);
 }
 </script>
 <template>

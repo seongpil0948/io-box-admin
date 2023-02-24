@@ -32,7 +32,15 @@ import {
   NDropdown,
   NSpace,
 } from "naive-ui";
-import { ref, h, computed, watch, shallowRef, defineAsyncComponent } from "vue";
+import {
+  ref,
+  h,
+  computed,
+  watch,
+  shallowRef,
+  defineAsyncComponent,
+  watchEffect,
+} from "vue";
 import { API_URL } from "@/constants";
 import {
   deletedPath,
@@ -43,7 +51,6 @@ import {
 } from "@/plugin/firebase";
 import { catchError } from "@/util";
 import { getStorage } from "@firebase/storage";
-import { useAuthStore } from "@/store";
 
 interface MigrateDoc {
   doc: ReturnType<typeof doc>;
@@ -54,9 +61,14 @@ const SearchUserAuto = defineAsyncComponent(
   () => import("@/component/search-user-auto")
 );
 
-const authStore = useAuthStore();
 const { sendAlarm } = useAlarm();
 const users = ref<IoUser[]>([]);
+const uById: { [uid: string]: IoUser } = {};
+watchEffect(() => {
+  users.value.forEach((u) => {
+    uById[u.userInfo.userId] = u;
+  });
+});
 const msg = useMessage();
 
 interface UserCombined extends IoUser, IoPayCRT {}
@@ -158,8 +170,7 @@ async function downloadUserOrder(row: UserCombined) {
 
   const virUserSnap = await getDocs(virUserC);
   const virVendors = virUserSnap.docs.map((x) => x.data()).filter((x) => x);
-  const u = authStore.currUser;
-  return downloadOrders(u, data, virVendors as IoUser[]);
+  return downloadOrders(uById, data, virVendors as IoUser[]);
 }
 async function onSelectMenu(key: string | number, row: UserCombined) {
   msg.info(String(key));
@@ -219,74 +230,65 @@ async function handleDelete(u: UserCombined) {
         svc: "USER",
         userId: uid,
       });
-      return new Promise((resolve) => {
-        runTransaction(ioFireStore, async (transaction) => {
-          const targets: MigrateDoc[] = [];
-          const cs = ["USER", "MAPPER", "IO_PAY"] as IoCollection[];
-          for (let i = 0; i < cs.length; i++) {
-            const c = getIoCollection(ioFireStore, { c: cs[i], uid });
-            const document = doc(c, uid);
-            const snap = await transaction.get(document);
-            if (snap.exists()) {
-              console.info(`data ${cs} exist`);
-              targets.push({ doc: document, data: snap.data() });
-            }
+      return runTransaction(ioFireStore, async (transaction) => {
+        const targets: MigrateDoc[] = [];
+        const cs = ["USER", "MAPPER", "IO_PAY"] as IoCollection[];
+        for (let i = 0; i < cs.length; i++) {
+          const c = getIoCollection(ioFireStore, { c: cs[i], uid });
+          const document = doc(c, uid);
+          const snap = await transaction.get(document);
+          if (snap.exists()) {
+            console.info(`data ${cs} exist`);
+            targets.push({ doc: document, data: snap.data() });
           }
-          // 다 삭제 주의...
-          const verbose: { collection: IoCollection; field?: string }[] = [
-            { collection: "SHOP_PROD", field: "shopId" },
-            // { collection: "SHOP_PROD", field: "vendorId" }, 주문정보까지 삭제해야되서 이건 일단 제외
-            { collection: "VENDOR_PROD", field: "vendorId" },
-            { collection: "ORDER_PROD" },
-            { collection: "ORDER_PROD_NUMBER" },
-            { collection: "SHIPMENT" },
-            { collection: "USER_LOG" },
-            { collection: "TOKENS" },
-            { collection: "VIRTUAL_ORDER_PROD" },
-            { collection: "VIRTUAL_USER" },
-            { collection: "VIRTUAL_VENDOR_PROD" },
-          ];
-          for (let k = 0; k < verbose.length; k++) {
-            const v = verbose[k];
-            const targetC = getIoCollection(ioFireStore, {
-              c: v.collection,
-              uid: uid,
-            });
-            const constraints: QueryConstraint[] = [];
-            if (v.field) constraints.push(where(v.field, "==", uid));
-            const targetSnap = await getDocs(query(targetC, ...constraints));
-            console.info(`snap size: ${targetSnap.size} with`, v);
-            targetSnap.docs.forEach((d) => {
-              targets.push({ doc: doc(targetC, d.id), data: d.data() });
-            });
-          }
-          for (let j = 0; j < targets.length; j++) {
-            const md = targets[j];
-            console.log(
-              `path: ${md.doc.path} deletedPath: ${deletedPath(md.doc.path)}`
-            );
-            transaction.set(
-              doc(ioFireStore, deletedPath(md.doc.path)),
-              md.data
-            );
-            transaction.delete(md.doc);
-          }
-          await deleteFolder(userRef);
-          return targets;
-        })
-          .then((d) => {
-            console.log("삭제성공: ", d);
-            msg.success("삭제성공");
-          })
-          .catch((err) => {
-            console.error(err);
-            msg.error(`삭제실패 ${JSON.stringify(err)}`);
-          })
-          .finally(() => {
-            resolve("onfinally: ");
-            d.loading = false;
+        }
+        // 다 삭제 주의...
+        const verbose: { collection: IoCollection; field?: string }[] = [
+          { collection: "SHOP_PROD", field: "shopId" },
+          // { collection: "SHOP_PROD", field: "vendorId" }, 주문정보까지 삭제해야되서 이건 일단 제외
+          { collection: "VENDOR_PROD", field: "vendorId" },
+          { collection: "ORDER_PROD" },
+          { collection: "ORDER_PROD_NUMBER" },
+          { collection: "SHIPMENT" },
+          { collection: "USER_LOG" },
+          { collection: "TOKENS" },
+          { collection: "VIRTUAL_ORDER_PROD" },
+          { collection: "VIRTUAL_USER" },
+          { collection: "VIRTUAL_VENDOR_PROD" },
+        ];
+        for (let k = 0; k < verbose.length; k++) {
+          const v = verbose[k];
+          const targetC = getIoCollection(ioFireStore, {
+            c: v.collection,
+            uid: uid,
           });
-      });
+          const constraints: QueryConstraint[] = [];
+          if (v.field) constraints.push(where(v.field, "==", uid));
+          const targetSnap = await getDocs(query(targetC, ...constraints));
+          console.info(`snap size: ${targetSnap.size} with`, v);
+          targetSnap.docs.forEach((d) => {
+            targets.push({ doc: doc(targetC, d.id), data: d.data() });
+          });
+        }
+        for (let j = 0; j < targets.length; j++) {
+          const md = targets[j];
+          console.log(`path: ${md.doc.path}`);
+          console.log(`deletedPath: ${deletedPath(md.doc.path)}`);
+          transaction.set(doc(ioFireStore, deletedPath(md.doc.path)), md.data);
+          transaction.delete(md.doc);
+        }
+        await deleteFolder(userRef);
+        return targets;
+      })
+        .then((d) => {
+          console.log("삭제성공: ", d);
+          msg.success("삭제성공");
+        })
+        .catch((err) => {
+          console.error(err);
+          msg.error(`삭제실패 ${JSON.stringify(err)}`);
+        })
+        .finally(() => (d.loading = false));
     },
   });
 }

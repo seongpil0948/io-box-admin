@@ -6,7 +6,7 @@ import { OrderItem, ORDER_STATE } from "../domain";
 import { utils, writeFile } from "xlsx";
 
 export async function downloadOrders(
-  u: IoUser,
+  shopById: { [uid: string]: IoUser },
   items: OrderItem[],
   virVendors: IoUser[]
 ) {
@@ -15,7 +15,6 @@ export async function downloadOrders(
     uniqueArr(items.map((d) => d.vendorId))
   );
 
-  const uName = getUserName(u);
   const vendorsById = [...vendors, ...virVendors].reduce((acc, v) => {
     if (!v) return acc;
     acc[v.userInfo.userId] = v;
@@ -27,7 +26,7 @@ export async function downloadOrders(
       const locate =
         vendor?.companyInfo?.shipLocate ?? vendor?.companyInfo?.locations[0];
       acc.push({
-        소매처: uName,
+        소매처: getUserName(shopById[curr.shopId]),
         도매처: getUserName(vendor),
         "도매처 연락처": vendor.userInfo.phone,
         "도매처 회사 연락처": vendor.companyInfo?.companyPhone,
@@ -49,7 +48,7 @@ export async function downloadOrders(
     return acc;
   }, [] as any[]);
   const date = new Date();
-  const fileName = `${uName}_${date.toLocaleString()}.xlsx`;
+  const fileName = `order_${date.toLocaleString()}.xlsx`;
   const worksheet = utils.json_to_sheet(json);
   const workbook = utils.book_new();
   utils.book_append_sheet(workbook, worksheet, "Dates");
