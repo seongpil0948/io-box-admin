@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { IoPay, IoPayCRT, IO_PAY_DB } from "@/composable";
 import {
+  IoPay,
+  IoPayCRT,
+  IO_PAY_DB,
   IoUser,
   USER_ROLE,
   userFromJson,
   USER_DB,
   userFireConverter,
-  getParentRef,
-  IoFireApp,
-  uniqueArr,
-  locateToStr,
-} from "@io-boxies/js-lib";
+  getUserName,
+  orderFireConverter,
+  downloadOrders,
+} from "@/composable";
+import { getParentRef, IoFireApp } from "@io-boxies/js-lib";
 import {
   doc,
   getDocs,
-  orderBy,
   query,
   QueryConstraint,
   runTransaction,
   where,
 } from "@firebase/firestore";
-import { getIoCollection, getUserName, IoCollection } from "@io-boxies/js-lib";
 import { useAlarm, UserSearchResult } from "@io-boxies/vue-lib";
 import {
   DataTableColumns,
@@ -34,10 +34,15 @@ import {
 } from "naive-ui";
 import { ref, h, computed, watch, shallowRef, defineAsyncComponent } from "vue";
 import { API_URL } from "@/constants";
-import { deletedPath, deleteFolder, ioFireStore } from "@/plugin/firebase";
+import {
+  deletedPath,
+  deleteFolder,
+  getIoCollection,
+  IoCollection,
+  ioFireStore,
+} from "@/plugin/firebase";
 import { catchError } from "@/util";
 import { getStorage } from "@firebase/storage";
-import { utils, writeFile } from "xlsx";
 import { useAuthStore } from "@/store";
 
 interface MigrateDoc {
@@ -67,7 +72,8 @@ watch(
       d.push(Object.assign({}, user, pay));
     }
     tableData.value = d;
-  }
+  },
+  { deep: true }
 );
 
 const target = ref<UserCombined | null>(null);
@@ -126,13 +132,8 @@ const c = getIoCollection(ioFireStore, { c: IoCollection.USER }).withConverter(
 );
 async function getNoPass() {
   users.value = [];
-  const snap = await getDocs(
-    query(
-      c,
-      where("userInfo.passed", "!=", true),
-      orderBy("userInfo.createdAt", "desc")
-    )
-  );
+  const snap = await getDocs(query(c, where("userInfo.passed", "!=", true)));
+  console.info("snapshot count: ", snap.size);
   snap.docs.forEach((d) => {
     const data = d.data();
     if (data) {
@@ -141,69 +142,39 @@ async function getNoPass() {
   });
 }
 async function downloadUserOrder(row: UserCombined) {
+  users.value = [];
   const orderC = getIoCollection(ioFireStore, {
     c: "ORDER_PROD",
     uid: row.userInfo.userId,
-  });
+  }).withConverter(orderFireConverter);
+  const orderSnap = await getDocs(orderC);
+  const orders = orderSnap.docs.map((x) => x.data()).filter((x) => x);
+  const data = orders.flatMap((x) => x.items);
+
   const virUserC = getIoCollection(ioFireStore, {
     c: "VIRTUAL_USER",
     uid: row.userInfo.userId,
   }).withConverter(userFireConverter);
-  users.value = [];
+
   const virUserSnap = await getDocs(virUserC);
   const virVendors = virUserSnap.docs.map((x) => x.data()).filter((x) => x);
-
-  const orderSnap = await getDocs(orderC);
-  const orders = orderSnap.docs.map((x) => x.data()).filter((x) => x);
-  const data = orders.flatMap((x) => x.items);
-  const vendors = await USER_DB.getUserByIds(
-    ioFireStore,
-    uniqueArr(data.map((d) => d.vendorId))
-  );
-
   const u = authStore.currUser;
-  const uName = getUserName(u);
-  const vendorsById = [...vendors, ...virVendors].reduce((acc, v) => {
-    if (!v) return acc;
-    acc[v.userInfo.userId] = v;
-    return acc;
-  }, {} as { [k: string]: IoUser });
-  const json = data.reduce((acc, curr) => {
-    const vendor = vendorsById[curr.vendorId];
-    if (vendor) {
-      const locate =
-        vendor?.companyInfo?.shipLocate ?? vendor?.companyInfo?.locations[0];
-      acc.push({
-        소매처: uName,
-        도매처: getUserName(vendor),
-        주문개수: curr.orderCnt,
-        소매상품명: curr.shopProd.prodName,
-        도매상품명: curr.vendorProd.vendorProdName,
-        컬러: curr.vendorProd.color,
-        사이즈: curr.vendorProd.size,
-        미송수량: curr.pendingCnt,
-        도매가: curr.vendorProd.vendorPrice,
-        합계: curr.orderCnt * curr.vendorProd.vendorPrice,
-        "도매처 건물명": locate?.alias ?? "",
-        "도매처 상세주소": locate?.detailLocate ?? "",
-        "도매처 주소": locate ? locateToStr(locate) : "",
-        핸드폰번호: locate?.phone,
-      });
-    }
-    return acc;
-  }, [] as any[]);
-  const date = new Date();
-  const fileName = `${uName}_${date.toLocaleString()}.xlsx`;
-  const worksheet = utils.json_to_sheet(json);
-  const workbook = utils.book_new();
-  utils.book_append_sheet(workbook, worksheet, "Dates");
-  writeFile(workbook, fileName);
+  return downloadOrders(u, data, virVendors as IoUser[]);
 }
-function onSelectMenu(key: string | number, row: UserCombined) {
+async function onSelectMenu(key: string | number, row: UserCombined) {
   msg.info(String(key));
   switch (key) {
     case "downloadOrder":
       downloadUserOrder(row);
+      break;
+    case "deleteUser":
+      await handleDelete(row);
+      break;
+    case "editUser":
+      target.value = row;
+      break;
+    case "detailUser":
+      detailUserTarget.value = row;
       break;
 
     default:
@@ -319,24 +290,16 @@ async function handleDelete(u: UserCombined) {
     },
   });
 }
+const UserSummary = defineAsyncComponent(
+  () => import("@/component/card/UserSummaryCard.vue")
+);
+const detailUserTarget = ref<IoUser | null>(null);
+function onUpdateModal(val: boolean) {
+  if (!val) {
+    detailUserTarget.value = null;
+  }
+}
 const columns: DataTableColumns<UserCombined> = [
-  {
-    title: "삭제",
-    key: "delete user",
-    render: (row) =>
-      h(
-        NButton,
-        {
-          size: "small",
-          type: "error",
-          onClick: async () => await handleDelete(row),
-        },
-        {
-          default: () => "삭제",
-        }
-      ),
-    width: 100,
-  },
   {
     title: "메뉴",
     key: "menu",
@@ -345,20 +308,31 @@ const columns: DataTableColumns<UserCombined> = [
         NDropdown,
         {
           trigger: "hover",
-          onSelect: (k) => onSelectMenu(k, row),
+          onSelect: async (k) => await onSelectMenu(k, row),
           options: [
             {
               label: "주문정보 다운",
               key: "downloadOrder",
+            },
+            {
+              label: "유저 삭제",
+              key: "deleteUser",
+            },
+            {
+              label: "유저 수정",
+              key: "editUser",
+            },
+            {
+              label: "유저 상세",
+              key: "detailUser",
             },
           ],
         },
         { default: () => h(NButton, {}, { default: () => "선택끄" }) }
       ),
   },
-  { title: "ID", key: "userInfo.userId", width: 200 },
-  { title: "이름", key: "userInfo.userName", width: 150 },
-  { title: "메일", key: "userInfo.email", width: 200 },
+  { title: "이름", key: "un", render: (row) => getUserName(row) },
+  { title: "메일", key: "userInfo.email" },
   {
     title: "역할",
     key: "userInfo.role",
@@ -366,8 +340,6 @@ const columns: DataTableColumns<UserCombined> = [
       return h(NTag, {}, { default: () => USER_ROLE[row.userInfo.role] });
     },
   },
-  { title: "가입경로", key: "userInfo.providerId" },
-  { title: "연락처", key: "userInfo.phone" },
   {
     title: "허가여부",
     key: "passed",
@@ -385,26 +357,6 @@ const columns: DataTableColumns<UserCombined> = [
       );
     },
   },
-  {
-    title: "수정",
-    key: "edit",
-    render(row) {
-      return h(
-        NButton,
-        {
-          strong: true,
-          tertiary: true,
-          size: "small",
-          onClick: () => {
-            target.value = row;
-          },
-        },
-        { default: () => "정보수정" }
-      );
-    },
-  },
-  { title: "회사이름", key: "companyInfo.companyName" },
-  { title: "회사연락처", key: "companyInfo.companyPhone" },
   { title: "코인", key: "budget" },
   { title: "보류코인", key: "pendingBudget" },
 ];
@@ -444,7 +396,6 @@ const env = import.meta.env.MODE === "production" ? "io-prod" : "io-dev";
     </template>
     <n-data-table
       :table-layout="'fixed'"
-      :scroll-x="2400"
       :columns="columns"
       :data="tableData"
       :bordered="false"
@@ -479,5 +430,12 @@ const env = import.meta.env.MODE === "production" ? "io-prod" : "io-dev";
         </n-space>
       </template>
     </n-card>
+  </n-modal>
+  <n-modal
+    :show="detailUserTarget !== null"
+    :on-update:show="onUpdateModal"
+    close-on-esc
+  >
+    <UserSummary :user="detailUserTarget!" />
   </n-modal>
 </template>

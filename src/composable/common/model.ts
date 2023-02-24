@@ -1,4 +1,4 @@
-import { dateToTimeStamp } from "@/util/date";
+import { dateToTimeStamp } from "@io-boxies/js-lib";
 
 export class CommonField {
   createdAt?: Date;

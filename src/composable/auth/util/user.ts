@@ -19,9 +19,13 @@ import {
   USER_PROVIDER,
   USER_ROLE,
 } from "@/composable";
-import { IoFireApp } from "@io-boxies/js-lib";
-import { dateToTimeStamp, loadDate } from "@/util/date";
-import { commonFromJson, commonToJson } from "@/util/io-fns";
+import {
+  commonFromJson,
+  commonToJson,
+  IoFireApp,
+  dateToTimeStamp,
+} from "@io-boxies/js-lib";
+import { loadDate } from "@/util/date";
 
 export const getUserLocate = (u: IoUser) => {
   if (!u.companyInfo || u.companyInfo.locations.length < 1) return null;
@@ -87,6 +91,7 @@ export function userFromJson(data: { [x: string]: any }): IoUser | null {
 
 export const userFireConverter: FirestoreDataConverter<IoUser | null> = {
   toFirestore: (u: IoUser) => {
+    console.log(u);
     const j = commonToJson(u);
     j.userInfo.createdAt = dateToTimeStamp(j.userInfo.createdAt);
     j.userInfo.updatedAt = dateToTimeStamp(j.userInfo.updatedAt);

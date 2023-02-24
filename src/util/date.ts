@@ -15,12 +15,6 @@ export const getCurrDate = (f: TIME_FORMATS = "DAY") =>
 export const timeToDate = (t: any, f: TIME_FORMATS = "DAY") =>
   formatDate(new Date(t), f);
 
-export function dateToTimeStamp(d: Date | undefined): Timestamp {
-  if (!d) {
-    d = new Date();
-  }
-  return Timestamp.fromDate(d);
-}
 export function loadDate(
   d: Date | { [x: string]: number } | string | undefined
 ): Date {

@@ -1,15 +1,29 @@
 <script setup lang="ts">
-import { ioFireStore } from "@/plugin/firebase";
-import { formatDate, getIoCollectionGroup, loadDate } from "@io-boxies/js-lib";
+import { ioFireStore, getIoCollectionGroup } from "@/plugin/firebase";
 import {
+  batchInQuery,
+  formatDate,
+  loadDate,
+  uniqueArr,
+} from "@io-boxies/js-lib";
+import {
+  downloadOrders,
   IoOrder,
+  IoUser,
   orderFireConverter,
   OrderItemCombined,
   ORDER_STATE,
   PayAmount,
   useCalenderSearch,
+  userFireConverter,
 } from "@/composable";
-import { getDocs, query, where } from "@firebase/firestore";
+import {
+  DocumentData,
+  getDocs,
+  Query,
+  query,
+  where,
+} from "@firebase/firestore";
 import {
   NSpace,
   NDivider,
@@ -24,8 +38,10 @@ import {
   NPopover,
 } from "naive-ui";
 import { ref, watch, h, shallowRef, defineAsyncComponent } from "vue";
-import { renderPopover } from "@/util";
+import { dataFromSnap, renderPopover } from "@/util";
+import { useAuthStore } from "@/store";
 
+const authStore = useAuthStore();
 const stateOpt = Object.entries(ORDER_STATE).map(([en, ko]) => ({
   label: ko,
   value: en,
@@ -68,7 +84,6 @@ watch(
 );
 
 const orders = shallowRef<IoOrder[]>([]);
-
 const PayAmountCard = defineAsyncComponent(
   () => import("@/component/card/PayAmountCard.vue")
 );
@@ -173,6 +188,23 @@ const orderColumns: DataTableColumns<IoOrder> = [
   },
 ];
 const orderRowKey = (row: IoOrder) => row.dbId;
+
+async function downOrders() {
+  const data = orders.value.flatMap((x) => x.items);
+
+  const virUserC = getIoCollectionGroup(
+    ioFireStore,
+    "VIRTUAL_USER"
+  ).withConverter(userFireConverter);
+  const virUserSnap = await batchInQuery<IoUser>(
+    uniqueArr(data.map((x) => x.vendorId)),
+    virUserC as Query<DocumentData>,
+    "userInfo.userId"
+  );
+  const virVendors = virUserSnap.flatMap(dataFromSnap<IoUser>);
+  const u = authStore.currUser;
+  return downloadOrders(u, data, virVendors);
+}
 </script>
 <template>
   <n-card title="주문 목록 페이지." style="width: 80vw">
@@ -187,16 +219,19 @@ const orderRowKey = (row: IoOrder) => row.dbId;
         @clear="onClear"
         @confirm="onConfirm"
       />
-      <n-select
-        v-model:value="states"
-        clearable
-        placeholder="주문상태 선택"
-        multiple
-        :options="stateOpt"
-      />
+      <n-space item-style="width: 100%">
+        <n-select
+          v-model:value="states"
+          clearable
+          placeholder="주문상태 선택"
+          multiple
+          :options="stateOpt"
+        />
+      </n-space>
       <n-space justify="end">
         행 개수: <n-text type="info"> {{ orders.length }} </n-text>
         <n-button @click="onSearch"> 검색 </n-button>
+        <n-button @click="downOrders"> 테이블 엑셀다운 </n-button>
       </n-space>
       <n-divider />
       <!-- Async expand tree data 로 비동기 로드가 가능하다. -->

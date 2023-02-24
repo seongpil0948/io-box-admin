@@ -33,9 +33,11 @@ declare module '@vue/runtime-core' {
     NForm: typeof import('naive-ui')['NForm']
     NFormItemGi: typeof import('naive-ui')['NFormItemGi']
     NGrid: typeof import('naive-ui')['NGrid']
+    NGridItem: typeof import('naive-ui')['NGridItem']
     NH1: typeof import('naive-ui')['NH1']
     NH2: typeof import('naive-ui')['NH2']
     NH3: typeof import('naive-ui')['NH3']
+    NImage: typeof import('naive-ui')['NImage']
     NInput: typeof import('naive-ui')['NInput']
     NLayout: typeof import('naive-ui')['NLayout']
     NLayoutSider: typeof import('naive-ui')['NLayoutSider']
@@ -65,6 +67,7 @@ declare module '@vue/runtime-core' {
     SearchUserAuto: typeof import('./src/component/search-user-auto.tsx')['default']
     ShipmentList: typeof import('./src/view/ship/ShipmentList.vue')['default']
     UserList: typeof import('./src/view/user/UserList.vue')['default']
+    UserLocateList: typeof import('./src/component/card/UserLocateList.vue')['default']
     UserSummaryCard: typeof import('./src/component/card/UserSummaryCard.vue')['default']
   }
 }
