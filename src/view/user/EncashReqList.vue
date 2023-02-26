@@ -14,10 +14,44 @@ import { formatDate, loadDate } from "@io-boxies/js-lib";
 import { DropdownOption, NText, NButton, NDropdown, NInput } from "naive-ui";
 import { TableColumns } from "naive-ui/es/data-table/src/interface";
 import { defineAsyncComponent, h, ref, watch } from "vue";
+import { utils, writeFile } from "xlsx";
 
 const { msg, approveEncash, c, rejectEncash } = useEncash();
-
+const userByIds = ref<{ [userId: string]: IoUser }>({});
 const encashList = ref<ReqEncash[]>([]);
+watch(
+  () => encashList.value,
+  async (val) => {
+    const targetIds = uniqueArr(val.map((x) => x.userId)).filter(
+      (y) => !Object.keys(userByIds.value).includes(y)
+    );
+    const users = await USER_DB.getUserByIds(ioFireStore, targetIds);
+    users.forEach((u) => {
+      userByIds.value[u.userInfo.userId] = u;
+    });
+  }
+);
+async function downloadAmountObj() {
+  console.log("encashList: ", encashList.value);
+  const json = encashList.value.map((x) => {
+    const acc = userByIds.value[x.userId].userInfo.account!;
+    return {
+      출금요청금액: x.amount,
+      계좌번호: acc.accountNumber,
+      은행명: acc.bank,
+      예금주명: acc.accountName,
+      생성일: formatDate(loadDate(x.createdAt), "MIN"),
+      메모: x.adminMemo ?? "",
+    };
+  });
+  const date = new Date();
+  const fileName = `encash_${date.toLocaleString()}.xlsx`;
+  const worksheet = utils.json_to_sheet(json);
+  const workbook = utils.book_new();
+  utils.book_append_sheet(workbook, worksheet, "Dates");
+  writeFile(workbook, fileName);
+}
+
 async function onSearch(filterDone: boolean) {
   let constraints = getConstraints();
   if (filterDone) {
@@ -37,19 +71,6 @@ const UserSummary = defineAsyncComponent(
   () => import("@/component/card/UserSummaryCard.vue")
 );
 
-const userByIds = ref<{ [userId: string]: IoUser }>({});
-watch(
-  () => encashList.value,
-  async (val) => {
-    const targetIds = uniqueArr(val.map((x) => x.userId)).filter(
-      (y) => !Object.keys(userByIds.value).includes(y)
-    );
-    const users = await USER_DB.getUserByIds(ioFireStore, targetIds);
-    users.forEach((u) => {
-      userByIds.value[u.userInfo.userId] = u;
-    });
-  }
-);
 const detailUserTarget = ref<IoUser | null>(null);
 const columns: TableColumns<ReqEncash> = [
   {
@@ -225,6 +246,9 @@ const {
         행 개수: <n-text type="info"> {{ encashList.length }} </n-text>
         <n-button @click="() => onSearch(false)"> 검색 </n-button>
         <n-button @click="() => onSearch(true)"> 미해결 검색 </n-button>
+        <n-button @click="() => downloadAmountObj()">
+          테이블 엑셀다운
+        </n-button>
       </n-space>
       <n-data-table
         ref="table"
