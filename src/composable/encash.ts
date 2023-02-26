@@ -33,7 +33,7 @@ export function useEncash() {
       return msg.error("유저 보유금액이 요청 금액보다 작습니다.");
 
     return pay
-      .updatePay("WITH_DRAW", -row.amount, 0)
+      .updatePay("WITH_DRAW", pay.budget - row.amount, 0)
       .then(async () => {
         const receipt: any = {
           approvedAt: new Date(),

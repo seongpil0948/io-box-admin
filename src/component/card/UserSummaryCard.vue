@@ -12,7 +12,7 @@ import { fireConverter } from "@/util";
 import { formatDate, loadDate } from "@/util/date";
 import { getDocs, limit, orderBy, query } from "@firebase/firestore";
 import { toRefs, watch, shallowRef, defineAsyncComponent } from "vue";
-const props = defineProps<{ user: IoUser }>();
+const props = defineProps<{ user: IoUser | null }>();
 const { user } = toRefs(props);
 const pay = shallowRef<IoPay | null>(null);
 const payHistory = shallowRef<PayHistoryCRT[]>([]);
@@ -28,7 +28,7 @@ const getC = (uid: string) =>
 watch(
   () => user.value,
   async (u) => {
-    if (!u.userInfo) return;
+    if (!u || !u.userInfo) return;
     pay.value = await IO_PAY_DB.getIoPayByUser(u.userInfo.userId);
     const docsRef = await getDocs(
       query(getC(u.userInfo.userId), orderBy("createdAt", "desc"), limit(50))
@@ -46,7 +46,7 @@ watch(
 
 <template>
   <n-card title="유저 상세정보">
-    <n-tabs type="line" animated>
+    <n-tabs v-if="user" type="line" animated>
       <n-tab-pane name="userInfo" tab="유저 기본 정보">
         <n-grid
           cols="1 s:2 m:2 l:3 xl:4 2xl:4"

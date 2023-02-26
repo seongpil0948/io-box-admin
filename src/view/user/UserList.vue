@@ -114,6 +114,9 @@ async function submitModal() {
           default: () => [
             `변경전: 금액(${existPay.budget}), 보류금액(${existPay.pendingBudget})`,
             `변경후: 금액(${pay.budget}), 보류금액(${pay.pendingBudget})`,
+            `증분량: 금액(${pay.budget - existPay.budget}, 보류금액(${
+              pay.pendingBudget - existPay.pendingBudget
+            })`,
           ],
         }
       ),
@@ -122,11 +125,7 @@ async function submitModal() {
     onPositiveClick: async () => {
       return Promise.all([
         USER_DB.updateUser(ioFireStore, targetU),
-        pay.updatePay(
-          "ADMIN_MODIFY",
-          pay.budget - existPay.budget,
-          pay.pendingBudget - existPay.pendingBudget
-        ),
+        existPay.updatePay("ADMIN_MODIFY", pay.budget, pay.pendingBudget),
       ])
         .then(() => {
           msg.info("성공");
