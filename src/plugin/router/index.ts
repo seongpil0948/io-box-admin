@@ -23,6 +23,11 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import("@/view/user/EncashReqList.vue"),
       },
       {
+        path: "user/chargeReqList",
+        name: "ChargeReqList",
+        component: () => import("@/view/user/ChargeReqList.vue"),
+      },
+      {
         path: "/csWrite",
         name: "CsWrite",
         component: () => import("@/view/CsWrite.vue"),

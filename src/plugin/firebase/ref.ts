@@ -1,3 +1,4 @@
+import { getCollectParam, IoCollection } from "./domain";
 import {
   CollectionReference,
   collection,
@@ -5,7 +6,6 @@ import {
   Firestore,
 } from "@firebase/firestore";
 import { RequiredField } from "@/util";
-import { getCollectParam, IoCollection } from "./domain";
 
 export function getIoCollection(
   store: Firestore,
@@ -76,12 +76,16 @@ export function getIoCollection(
     case IoCollection.REQUEST_ENCASH:
       str = `requestEncash`;
       break;
+    case IoCollection.REQUEST_CHARGE:
+      str = `requestCharge`;
+      break;
     default:
       throw Error(`IoCollection Enum Member ${p.c.toString()} is not Exist`);
   }
 
   return collection(store, str);
 }
+
 export function getIoCollectionGroup(store: Firestore, c: IoCollection) {
   let str: string;
   switch (c) {

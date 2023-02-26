@@ -24,6 +24,10 @@ const menuOptions: MenuOption[] = [
         label: () => renderRoute("정산요청목록", "EncashReqList"),
         key: "EncashReqList",
       },
+      {
+        label: () => renderRoute("충전요청목록", "ChargeReqList"),
+        key: "ChargeReqList",
+      },
     ],
   },
   {

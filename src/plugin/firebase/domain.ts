@@ -2,6 +2,8 @@ export type IoCollection =
   | "USER"
   | "IO_PAY"
   | "PAY_HISTORY"
+  | "REQUEST_ENCASH"
+  | "REQUEST_CHARGE"
   | "VENDOR_PROD"
   | "SHOP_PROD"
   | "MAPPER"
@@ -14,7 +16,6 @@ export type IoCollection =
   | "CS_POST"
   | "TEST"
   | "VIRTUAL_VENDOR_PROD"
-  | "REQUEST_ENCASH"
   | "VIRTUAL_ORDER_PROD"
   | "VIRTUAL_USER";
 
@@ -38,6 +39,7 @@ export const IoCollection: { [key in IoCollection]: IoCollection } =
     VIRTUAL_ORDER_PROD: "VIRTUAL_ORDER_PROD",
     VIRTUAL_USER: "VIRTUAL_USER",
     REQUEST_ENCASH: "REQUEST_ENCASH",
+    REQUEST_CHARGE: "REQUEST_CHARGE",
   });
 
 export interface getCollectParam {

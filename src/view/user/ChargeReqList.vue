@@ -3,21 +3,38 @@ import {
   getUserName,
   IoUser,
   ReqEncash,
+  reqEncashConverter,
   useCalenderSearch,
-  useEncash,
   USER_DB,
 } from "@/composable";
-import { ioFireStore } from "@/plugin/firebase";
+import { getIoCollection, ioFireStore } from "@/plugin/firebase";
+import { catchError } from "@/util";
 import { uniqueArr } from "@/util/io-fns";
-import { getDocs, orderBy, query, where } from "@firebase/firestore";
+import {
+  doc,
+  getDocs,
+  orderBy,
+  query,
+  updateDoc,
+  where,
+} from "@firebase/firestore";
 import { formatDate, loadDate } from "@io-boxies/js-lib";
-import { DropdownOption, NText, NButton, NDropdown, NInput } from "naive-ui";
+import {
+  DropdownOption,
+  NText,
+  NButton,
+  NDropdown,
+  NInput,
+  useMessage,
+} from "naive-ui";
 import { TableColumns } from "naive-ui/es/data-table/src/interface";
 import { defineAsyncComponent, h, ref, watch } from "vue";
 
-const { msg, approveEncash, c, rejectEncash } = useEncash();
-
-const encashList = ref<ReqEncash[]>([]);
+const msg = useMessage();
+const c = getIoCollection(ioFireStore, { c: "REQUEST_CHARGE" }).withConverter(
+  reqEncashConverter
+);
+const chargeList = ref<ReqEncash[]>([]);
 async function onSearch(filterDone: boolean) {
   let constraints = getConstraints();
   if (filterDone) {
@@ -27,10 +44,8 @@ async function onSearch(filterDone: boolean) {
   const q = query(c, ...constraints);
 
   const snap = await getDocs(q);
-  // dataFromSnap<IoOrder>(snap)
-  encashList.value = snap.docs.map((x) => x.data()).filter((x) => x);
-  console.log("result: ", encashList.value);
-  // updatePay
+  chargeList.value = snap.docs.map((x) => x.data()).filter((x) => x);
+  console.log("result: ", chargeList.value);
 }
 
 const UserSummary = defineAsyncComponent(
@@ -39,7 +54,7 @@ const UserSummary = defineAsyncComponent(
 
 const userByIds = ref<{ [userId: string]: IoUser }>({});
 watch(
-  () => encashList.value,
+  () => chargeList.value,
   async (val) => {
     const targetIds = uniqueArr(val.map((x) => x.userId)).filter(
       (y) => !Object.keys(userByIds.value).includes(y)
@@ -126,25 +141,40 @@ const columns: TableColumns<ReqEncash> = [
               key: "reject",
             },
           ],
-          onSelect: (key: string | number, option: DropdownOption) => {
+          onSelect: async (key: string | number, option: DropdownOption) => {
             const u = userByIds.value[row.userId];
-            const account = u?.userInfo.account;
             if (!u) return msg.error("유저를 찾을수 없습니다.");
-            else if (
-              !account ||
-              !account.code ||
-              !account.bank ||
-              !account.accountName ||
-              !account.accountNumber ||
-              account.accountNumber.length < 3
-            )
-              return msg.error("유효하지 않은 계좌정보 .");
             if (option.key === "approve") {
               console.info("approved", row, key, u);
-              approveEncash(row, account);
+              const receipt: any = {
+                approvedAt: new Date(),
+                isDone: true,
+                result: "approve",
+              };
+              if (row.adminMemo) {
+                receipt["adminMemo"] = row.adminMemo;
+              }
+              updateDoc(doc(c, row.dbId), receipt)
+                .then(() => {
+                  msg.success("성공");
+                })
+                .catch((err) =>
+                  catchError({ err, msg, prefix: "데이터 처리 실패" })
+                );
             } else if (option.key === "reject") {
               console.info("rejected", row, key, u);
-              rejectEncash(row);
+              updateDoc(doc(c, row.dbId), {
+                rejectedAt: new Date(),
+                isDone: true,
+                adminMemo: row.adminMemo ?? "",
+                result: "rejected",
+              })
+                .then(() => {
+                  msg.success("성공");
+                })
+                .catch((err) =>
+                  catchError({ err, msg, prefix: "데이터 처리 실패" })
+                );
             }
           },
         },
@@ -210,7 +240,7 @@ const {
 <template>
   <n-space vertical item-style="width: 100%; height: 100%">
     <n-card>
-      <n-h3>EncashReqList</n-h3>
+      <n-h3>Charge Request List</n-h3>
       <n-date-picker
         v-model:value="createdRange"
         :value-format="valueFormat"
@@ -222,31 +252,19 @@ const {
         @confirm="onConfirm"
       />
       <n-space justify="end" style="padding: 1% 5%; padding-right: 10%">
-        행 개수: <n-text type="info"> {{ encashList.length }} </n-text>
+        행 개수: <n-text type="info"> {{ chargeList.length }} </n-text>
         <n-button @click="() => onSearch(false)"> 검색 </n-button>
         <n-button @click="() => onSearch(true)"> 미해결 검색 </n-button>
       </n-space>
       <n-data-table
         ref="table"
         :columns="columns"
-        :data="encashList"
+        :data="chargeList"
         :pagination="{
           showSizePicker: true,
           pageSizes: [5, 10, 25, 50],
         }"
       />
-      <n-p>메모는 승인 또는 거절시 반영됩니다.</n-p>
-      <n-p>
-        "유저 코인은 차감 되었지만, 송금 과정에서 문제가 발생했습니다." 에러
-        발생시 수동으로 송금 해줘야 합니다.
-      </n-p>
-      <n-p>
-        "유저 보유금액(코인) 차감 실패" 에러 발생시 수동으로 송금 및 개발자에게
-        해당행과 함께 전달 해줘야 합니다.
-      </n-p>
-      <n-text strong type="error">
-        걍 뭔가 싸하면 01071840948 콜때리고 해당행 보존해주세요.
-      </n-text>
     </n-card>
   </n-space>
   <n-modal

@@ -10,6 +10,7 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     AreaSelector: typeof import('./src/component/AreaSelector.vue')['default']
+    ChargeReqList: typeof import('./src/view/user/ChargeReqList.vue')['default']
     CsPostForm: typeof import('./src/component/cs/CsPostForm.vue')['default']
     CsPostList: typeof import('./src/view/CsPostList.vue')['default']
     CsWrite: typeof import('./src/view/CsWrite.vue')['default']

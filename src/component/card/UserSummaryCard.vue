@@ -28,6 +28,7 @@ const getC = (uid: string) =>
 watch(
   () => user.value,
   async (u) => {
+    if (!u.userInfo) return;
     pay.value = await IO_PAY_DB.getIoPayByUser(u.userInfo.userId);
     const docsRef = await getDocs(
       query(getC(u.userInfo.userId), orderBy("createdAt", "desc"), limit(50))

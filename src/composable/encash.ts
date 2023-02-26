@@ -7,7 +7,7 @@ import {
 } from "@/composable";
 import { catchError } from "@/util";
 import { doc, updateDoc } from "@firebase/firestore";
-import axios from "@/plugin/axios";
+// import axios from "@/plugin/axios";
 import { getIoCollection, ioFireStore } from "@/plugin/firebase";
 
 export function useEncash() {
@@ -19,12 +19,13 @@ export function useEncash() {
     await updateDoc(doc(c, row.dbId), {
       rejectedAt: new Date(),
       isDone: true,
-      adminMemo: row.adminMemo,
+      adminMemo: row.adminMemo ?? "",
       result: "rejected",
     });
     msg.success("반려 완료");
   }
   async function approveEncash(row: ReqEncash, account: IoAccount) {
+    console.log("account: ", account);
     if (row.approvedAt || row.isDone)
       return msg.error("이미 완료된 건 입니다.");
     const pay = await IO_PAY_DB.getIoPayByUser(row.userId);
@@ -43,24 +44,25 @@ export function useEncash() {
           receipt["adminMemo"] = row.adminMemo;
         }
         await updateDoc(doc(c, row.dbId), receipt);
-        const formData = new FormData();
-        formData.set("amount", String(row.amount));
-        formData.set("bankCode", account!.code);
-        formData.set("accountNo", account!.accountNumber);
-        formData.set("accountName", account!.accountName);
-        axios
-          .post("/api/payagent/remitAccount", formData)
-          .then(() => {
-            msg.success("프로세스 전체 성공");
-          })
-          .catch((err) =>
-            catchError({
-              err,
-              msg,
-              prefix:
-                "유저 코인은 차감 되었지만, 송금 과정에서 문제가 발생했습니다.",
-            })
-          );
+        msg.success("성공");
+        // const formData = new FormData();
+        // formData.set("amount", String(row.amount));
+        // formData.set("bankCode", account!.code);
+        // formData.set("accountNo", account!.accountNumber);
+        // formData.set("accountName", account!.accountName);
+        // axios
+        //   .post("/api/payagent/remitAccount", formData)
+        //   .then(() => {
+        //     msg.success("프로세스 전체 성공");
+        //   })
+        //   .catch((err) =>
+        //     catchError({
+        //       err,
+        //       msg,
+        //       prefix:
+        //         "유저 코인은 차감 되었지만, 송금 과정에서 문제가 발생했습니다.",
+        //     })
+        //   );
       })
       .catch((err) =>
         catchError({ err, msg, prefix: "유저 보유금액(코인) 차감 실패" })
