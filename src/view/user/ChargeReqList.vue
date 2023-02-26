@@ -7,6 +7,7 @@ import {
   useCalenderSearch,
   USER_DB,
 } from "@/composable";
+import { feeCharge } from "@/constants";
 import { getIoCollection, ioFireStore } from "@/plugin/firebase";
 import { catchError } from "@/util";
 import { uniqueArr } from "@/util/io-fns";
@@ -89,9 +90,17 @@ const columns: TableColumns<ReqEncash> = [
       ),
   },
   {
+    title: "결제금액",
+    key: "mustAmount",
+    render(row) {
+      return row.amount + row.amount * (feeCharge / 100);
+    },
+  },
+  {
     title: "요청액",
     key: "amount",
   },
+
   {
     title: "닉네임",
     key: "userName",
@@ -100,6 +109,7 @@ const columns: TableColumns<ReqEncash> = [
       return u ? getUserName(u) : "-";
     },
   },
+
   {
     title: "상태",
     key: "result",

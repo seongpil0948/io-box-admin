@@ -7,6 +7,7 @@ import {
   useEncash,
   USER_DB,
 } from "@/composable";
+import { feeEncash } from "@/constants";
 import { ioFireStore } from "@/plugin/firebase";
 import { uniqueArr } from "@/util/io-fns";
 import { getDocs, orderBy, query, where } from "@firebase/firestore";
@@ -37,6 +38,7 @@ async function downloadAmountObj() {
     const acc = userByIds.value[x.userId].userInfo.account!;
     return {
       출금요청금액: x.amount,
+      "실 정산 금액": x.amount - feeEncash,
       계좌번호: acc.accountNumber,
       은행명: acc.bank,
       예금주명: acc.accountName,
@@ -93,6 +95,13 @@ const columns: TableColumns<ReqEncash> = [
           },
         }
       ),
+  },
+  {
+    title: "정산 금액",
+    key: "encashAmount",
+    render(row) {
+      return row.amount - feeEncash;
+    },
   },
   {
     title: "요청액",
