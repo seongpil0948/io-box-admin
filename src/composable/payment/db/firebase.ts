@@ -73,7 +73,7 @@ async function getPayFromDoc(d: DocumentSnapshot<IoPay | null>, uid: string) {
   return d.data()!;
 }
 
-const getPayCollection = () =>
+export const getPayCollection = () =>
   getIoCollection(ioFireStore, { c: IoCollection.IO_PAY }).withConverter(
     IoPay.fireConverter()
   );
