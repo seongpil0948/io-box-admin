@@ -28,11 +28,11 @@ async function getAllCash() {
         <n-button @click="getAllCash"> 받아오기(많이하지마셈) </n-button>
         <n-space justify="space-between">
           <n-text strong>총 보유금액</n-text>
-          <n-text type="info">{{ allBudget }}</n-text>
+          <n-text type="info">{{ allBudget.toLocaleString() }}</n-text>
         </n-space>
         <n-space justify="space-between">
           <n-text strong>총 보유 보류금액</n-text>
-          <n-text type="info">{{ allPendingBudget }}</n-text>
+          <n-text type="info">{{ allPendingBudget.toLocaleString() }}</n-text>
         </n-space>
       </n-space>
     </n-card>
