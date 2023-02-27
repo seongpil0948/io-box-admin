@@ -10,6 +10,7 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     AreaSelector: typeof import('./src/component/AreaSelector.vue')['default']
+    ChargeCalculator: typeof import('./src/component/common/ChargeCalculator.vue')['default']
     ChargeReqList: typeof import('./src/view/user/ChargeReqList.vue')['default']
     CsPostForm: typeof import('./src/component/cs/CsPostForm.vue')['default']
     CsPostList: typeof import('./src/view/CsPostList.vue')['default']
@@ -40,6 +41,7 @@ declare module '@vue/runtime-core' {
     NH3: typeof import('naive-ui')['NH3']
     NImage: typeof import('naive-ui')['NImage']
     NInput: typeof import('naive-ui')['NInput']
+    NInputNumber: typeof import('naive-ui')['NInputNumber']
     NLayout: typeof import('naive-ui')['NLayout']
     NLayoutSider: typeof import('naive-ui')['NLayoutSider']
     NLoadingBarProvider: typeof import('naive-ui')['NLoadingBarProvider']

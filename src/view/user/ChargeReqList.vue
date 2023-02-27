@@ -262,6 +262,7 @@ const {
         @confirm="onConfirm"
       />
       <n-space justify="end" style="padding: 1% 5%; padding-right: 10%">
+        <charge-calculator />
         행 개수: <n-text type="info"> {{ chargeList.length }} </n-text>
         <n-button @click="() => onSearch(false)"> 검색 </n-button>
         <n-button @click="() => onSearch(true)"> 미해결 검색 </n-button>

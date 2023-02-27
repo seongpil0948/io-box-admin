@@ -1,4 +1,4 @@
-export const API_URL = "https://io-box.du.r.appspot.com";
+export const API_URL = "https://io-box.du.r.appspot.com/api";
 
 export const KAKAO_CHANNEL_ID = "_lwnyb";
 const pw = "0525cc";

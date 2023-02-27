@@ -24,7 +24,12 @@ export function loadDate(
   else if (typeof d === "number") return Timestamp.fromMillis(d).toDate();
   else if (d.seconds && d.nanoseconds)
     return new Timestamp(d.seconds, d.nanoseconds).toDate();
+  else if (
+    Object.keys(d).includes("seconds") &&
+    Object.keys(d).includes("nanoseconds")
+  )
+    return new Timestamp(d.seconds, d.nanoseconds).toDate();
   else if (d.seconds && d.constructor.name === "ut")
     return new Timestamp(d.seconds + 60 * 60 * 15, d.nanoseconds).toDate();
-  else throw Error("Fail to load Date");
+  else throw Error("Fail to load Date " + JSON.stringify(d));
 }

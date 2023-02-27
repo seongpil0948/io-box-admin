@@ -93,6 +93,14 @@ export default defineComponent({
                 },
               },
               {
+                match: {
+                  username: {
+                    query: input,
+                    fuzziness: 1,
+                  },
+                },
+              },
+              {
                 fuzzy: {
                   username: {
                     value: input,
